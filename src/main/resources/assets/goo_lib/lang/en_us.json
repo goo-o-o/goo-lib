@@ -1,0 +1,10 @@
+{
+  "attributes.goo_lib.lifesteal": "Lifesteal",
+  "attributes.goo_lib.draw_speed": "Bow Draw Speed",
+  "attributes.goo_lib.arrow_velocity": "Arrow Velocity",
+  "attributes.goo_lib.arrow_damage": "Arrow Damage",
+  "attributes.goo_lib.arrow_gravity": "Arrow Gravity",
+  "attributes.goo_lib.critical_damage": "Critical Damage",
+  "attributes.goo_lib.xp_gain": "XP Gain",
+  "attributes.goo_lib.healing_received": "Healing Received"
+}
