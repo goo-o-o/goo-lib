@@ -1,7 +1,7 @@
 package com.goo.goo_lib.mixin;
 
 
-import com.goo.goo_lib.common.Attributes;
+import com.goo.goo_lib.common.registry.GLAttributes;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -47,7 +47,7 @@ public class ItemInHandRendererMixin {
             return;
         }
 
-        AttributeInstance drawTimeAttr = localPlayer.getAttribute(Attributes.DRAW_SPEED);
+        AttributeInstance drawTimeAttr = localPlayer.getAttribute(GLAttributes.DRAW_SPEED);
         if (drawTimeAttr == null) {
             return;
         }

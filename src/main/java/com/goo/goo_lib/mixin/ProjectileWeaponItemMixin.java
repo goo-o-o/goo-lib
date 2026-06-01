@@ -1,6 +1,6 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.common.Attributes;
+import com.goo.goo_lib.common.registry.GLAttributes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -25,6 +25,6 @@ public class ProjectileWeaponItemMixin {
             InteractionHand hand,
             ItemStack weapon
     ) {
-        return (float) (originalVelocity * shooter.getAttributeValue(Attributes.ARROW_VELOCITY));
+        return (float) (originalVelocity * shooter.getAttributeValue(GLAttributes.ARROW_VELOCITY));
     }
 }

@@ -1,12 +1,13 @@
-package com.goo.goo_lib.common;
+package com.goo.goo_lib.common.registry;
 
+import com.goo.goo_lib.common.GooLib;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.neoforged.neoforge.common.PercentageAttribute;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-public class Attributes {
+public class GLAttributes {
     public static final DeferredRegister<Attribute> ATTRIBUTES = DeferredRegister.create(
             BuiltInRegistries.ATTRIBUTE, GooLib.MOD_ID);
 

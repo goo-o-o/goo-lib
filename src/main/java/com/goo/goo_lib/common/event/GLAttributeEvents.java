@@ -1,6 +1,6 @@
 package com.goo.goo_lib.common.event;
 
-import com.goo.goo_lib.common.Attributes;
+import com.goo.goo_lib.common.registry.GLAttributes;
 import com.goo.goo_lib.common.GooLib;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -21,11 +21,11 @@ import net.neoforged.neoforge.event.entity.player.CriticalHitEvent;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
 
 @EventBusSubscriber(modid = GooLib.MOD_ID)
-public class AttributeEvents {
+public class GLAttributeEvents {
 
     @SubscribeEvent
     public static void addAttributes(EntityAttributeModificationEvent event) {
-        Attributes.ATTRIBUTES.getEntries().forEach(attributeDeferredHolder -> {
+        GLAttributes.ATTRIBUTES.getEntries().forEach(attributeDeferredHolder -> {
             if (!event.has(EntityType.PLAYER, attributeDeferredHolder))
                 event.add(EntityType.PLAYER, attributeDeferredHolder);
         });
@@ -39,7 +39,7 @@ public class AttributeEvents {
         if (source.is(DamageTypes.PLAYER_ATTACK)) {
             if (source.getDirectEntity() == source.getEntity()) {
                 if (source.getEntity() instanceof Player player) {
-                    player.heal((float) (event.getNewDamage() * player.getAttributeValue(Attributes.LIFESTEAL)));
+                    player.heal((float) (event.getNewDamage() * player.getAttributeValue(GLAttributes.LIFESTEAL)));
                 }
             }
         }
@@ -48,7 +48,7 @@ public class AttributeEvents {
     @SubscribeEvent
     public static void onCrit(CriticalHitEvent event) {
         if (event.isVanillaCritical()) {
-            event.setDamageMultiplier((float) (event.getEntity().getAttributeValue(Attributes.CRITICAL_DAMAGE)));
+            event.setDamageMultiplier((float) (event.getEntity().getAttributeValue(GLAttributes.CRITICAL_DAMAGE)));
         }
     }
 
@@ -57,7 +57,7 @@ public class AttributeEvents {
     }
 
     /**
-     * This event handler is the implementation for {@link Attributes#DRAW_SPEED}.<br>
+     * This event handler is the implementation for {@link GLAttributes#DRAW_SPEED}.<br>
      * Each full point of draw speed provides an extra using tick per game tick.<br>
      * Each partial point of draw speed provides an extra using tick periodically.<br>
      * Adapted from <a href="https://github.com/Shadows-of-Fire/Apothic-Attributes/blob/1.21/src/main/java/dev/shadowsoffire/apothic_attributes/impl/AttributeEvents.java#L74">Apotheosis</a>
@@ -65,7 +65,7 @@ public class AttributeEvents {
     @SubscribeEvent
     public static void drawSpeed(LivingEntityUseItemEvent.Tick e) {
         if (e.getEntity() instanceof Player player) {
-            double drawSpeed = player.getAttributeValue(Attributes.DRAW_SPEED);
+            double drawSpeed = player.getAttributeValue(GLAttributes.DRAW_SPEED);
             if (drawSpeed == 1.0 || !canBenefitFromDrawSpeed(e.getItem())) return;
 
             // Speed up logic
@@ -102,33 +102,33 @@ public class AttributeEvents {
     @SubscribeEvent
     public static void onLivingHeal(LivingHealEvent event) {
         if (event.getEntity() instanceof Player player) {
-            event.setAmount((float) (event.getAmount() * player.getAttributeValue(Attributes.HEALING_RECEIVED)));
+            event.setAmount((float) (event.getAmount() * player.getAttributeValue(GLAttributes.HEALING_RECEIVED)));
             if (event.getAmount() <= 0) event.setCanceled(true);
         }
     }
 
     /**
-     * Handles {@link Attributes#XP_GAIN}
+     * Handles {@link GLAttributes#XP_GAIN}
      */
 
     @SubscribeEvent
     public static void onMobDropExp(LivingExperienceDropEvent event) {
         if (event.getAttackingPlayer() != null) {
-            event.setDroppedExperience((int) (event.getDroppedExperience() * event.getAttackingPlayer().getAttributeValue(Attributes.XP_GAIN)));
+            event.setDroppedExperience((int) (event.getDroppedExperience() * event.getAttackingPlayer().getAttributeValue(GLAttributes.XP_GAIN)));
         }
     }
 
     @SubscribeEvent
     public static void onBlockDrops(BlockDropsEvent event) {
         if (event.getBreaker() instanceof Player player) {
-            event.setDroppedExperience((int) (event.getDroppedExperience() * player.getAttributeValue(Attributes.XP_GAIN)));
+            event.setDroppedExperience((int) (event.getDroppedExperience() * player.getAttributeValue(GLAttributes.XP_GAIN)));
         }
     }
 
     @SubscribeEvent
     public static void onGrindstone(GrindstoneEvent.OnTakeItem event) {
         if (event.getPlayer() != null)
-            event.setXp((int) (event.getXp() * event.getPlayer().getAttributeValue(Attributes.XP_GAIN)));
+            event.setXp((int) (event.getXp() * event.getPlayer().getAttributeValue(GLAttributes.XP_GAIN)));
     }
 
 

@@ -1,6 +1,6 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.common.Attributes;
+import com.goo.goo_lib.common.registry.GLAttributes;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.level.Level;
@@ -14,7 +14,7 @@ public class VillagerMixin {
     private ExperienceOrb modifyTradeXp(Level level, double x, double y, double z, int value) {
         Villager trader = (((Villager) (Object) this));
         if (trader.getTradingPlayer() != null) {
-            return new ExperienceOrb(level, x, y, z, (int) (value * trader.getTradingPlayer().getAttributeValue(Attributes.XP_GAIN)));
+            return new ExperienceOrb(level, x, y, z, (int) (value * trader.getTradingPlayer().getAttributeValue(GLAttributes.XP_GAIN)));
         }
         return new ExperienceOrb(level, x, y, z, value);
     }

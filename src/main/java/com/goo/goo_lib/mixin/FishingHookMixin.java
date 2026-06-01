@@ -1,6 +1,6 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.common.Attributes;
+import com.goo.goo_lib.common.registry.GLAttributes;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FishingHook;
@@ -25,6 +25,6 @@ public class FishingHookMixin {
         FishingHook hook = (((FishingHook) (Object) this));
         Player player = hook.getPlayerOwner();
         assert player != null; // we can assert because the original method checks for it
-        return new ExperienceOrb(player.level(), x, y, z, (int) (vanillaXpValue * player.getAttributeValue(Attributes.XP_GAIN)));
+        return new ExperienceOrb(player.level(), x, y, z, (int) (vanillaXpValue * player.getAttributeValue(GLAttributes.XP_GAIN)));
     }
 }

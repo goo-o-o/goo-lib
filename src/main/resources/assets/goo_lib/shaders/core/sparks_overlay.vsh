@@ -1,0 +1,20 @@
+#version 150
+
+in vec3 Position;
+in vec4 Color;
+in vec2 UV0;
+
+uniform mat4 ModelViewMat;
+uniform mat4 ProjMat;
+
+out vec4 vertexColor;
+out vec2 vertexUV;
+
+void main() {
+    // Standard matrix multiplication to project 2D GUI units to the window bounds
+    gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
+
+    // Pass values through to the fragment shader
+    vertexColor = Color;
+    vertexUV = UV0;
+}

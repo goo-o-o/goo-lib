@@ -36,7 +36,7 @@ public class MobEffectInstanceMixin implements MixinInterfaces.MobEffectInstance
      * Saves the SourceID to NBT when the effect instance is exported.
      */
     @Inject(method = "save", at = @At("RETURN"))
-    private void brutality$saveSource(CallbackInfoReturnable<Tag> cir) {
+    private void gl$saveSource(CallbackInfoReturnable<Tag> cir) {
         if (this.goo_lib$sourceId != null) {
 
             Tag vanillaTag = cir.getReturnValue();
@@ -53,22 +53,22 @@ public class MobEffectInstanceMixin implements MixinInterfaces.MobEffectInstance
      * 1.21.1 uses a static 'load' method that returns a nullable MobEffectInstance.
      */
     @Inject(method = "load", at = @At("RETURN"))
-    private static void brutality$loadSource(CompoundTag tag, CallbackInfoReturnable<MobEffectInstance> cir) {
+    private static void gl$loadSource(CompoundTag tag, CallbackInfoReturnable<MobEffectInstance> cir) {
         MobEffectInstance instance = cir.getReturnValue();
         if (instance != null && tag.contains("source_id")) {
             if (instance instanceof MixinInterfaces.MobEffectInstanceSourceAccessor accessor) {
-                accessor.goo_lib$setSourceId(tag.getInt("goo_lib:source_id"));
+                accessor.gl$setSourceId(tag.getInt("goo_lib:source_id"));
             }
         }
     }
 
     @Override
-    public Integer goo_lib$getSourceId() {
+    public Integer gl$getSourceId() {
         return this.goo_lib$sourceId;
     }
 
     @Override
-    public void goo_lib$setSourceId(int id) {
+    public void gl$setSourceId(int id) {
         this.goo_lib$sourceId = id;
     }
 }

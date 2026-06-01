@@ -1,6 +1,6 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.common.Attributes;
+import com.goo.goo_lib.common.registry.GLAttributes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -39,7 +39,7 @@ public class AbstractFurnaceBlockEntityMixin {
         float finalXp = experience;
 
         if (player != null) {
-            finalXp = (float) (experience * player.getAttributeBaseValue(Attributes.XP_GAIN));
+            finalXp = (float) (experience * player.getAttributeBaseValue(GLAttributes.XP_GAIN));
         }
 
         // creatExperience is private, so let's just mimic logic

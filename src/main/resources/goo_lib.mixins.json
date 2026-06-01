@@ -13,13 +13,19 @@
     "FishingHookMixin",
     "MobEffectInstanceMixin",
     "ProjectileWeaponItemMixin",
+    "StyleMixin",
     "ThrownExperienceBottleMixin",
     "VillagerMixin",
     "WanderingTraderMixin"
   ],
   "client": [
+    "BakedGlyphMixin",
     "ClientPacketListenerMixin",
-    "ItemInHandRendererMixin"
+    "CompositeRenderTypeAccessor",
+    "CompositeStateAccessor",
+    "FontMixin",
+    "ItemInHandRendererMixin",
+    "StringRenderOutputMixin"
   ],
   "injectors": {
     "defaultRequire": 1

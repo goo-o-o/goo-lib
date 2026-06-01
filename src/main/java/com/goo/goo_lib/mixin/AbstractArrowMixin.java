@@ -1,6 +1,6 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.common.Attributes;
+import com.goo.goo_lib.common.registry.GLAttributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,7 +22,7 @@ public abstract class AbstractArrowMixin {
         AbstractArrow arrow = (AbstractArrow) (Object) this;
 
         if (arrow.getOwner() instanceof Player player) {
-            return (float) (finalDamage * player.getAttributeValue(Attributes.ARROW_DAMAGE));
+            return (float) (finalDamage * player.getAttributeValue(GLAttributes.ARROW_DAMAGE));
         }
 
         return finalDamage;

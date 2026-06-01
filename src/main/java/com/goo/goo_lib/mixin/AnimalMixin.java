@@ -1,6 +1,6 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.common.Attributes;
+import com.goo.goo_lib.common.registry.GLAttributes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.AgeableMob;
@@ -36,7 +36,7 @@ public class AnimalMixin {
         int finalXpValue = vanillaXpValue;
 
         if (player != null) {
-            finalXpValue = (int) (vanillaXpValue * player.getAttributeValue(Attributes.XP_GAIN));
+            finalXpValue = (int) (vanillaXpValue * player.getAttributeValue(GLAttributes.XP_GAIN));
         }
 
         return new ExperienceOrb(orbLevel, x, y, z, finalXpValue);

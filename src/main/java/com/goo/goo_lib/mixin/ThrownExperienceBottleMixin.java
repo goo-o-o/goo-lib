@@ -1,6 +1,6 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.common.Attributes;
+import com.goo.goo_lib.common.registry.GLAttributes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -29,7 +29,7 @@ public class ThrownExperienceBottleMixin {
         int finalXpValue = originalXpValue;
 
         if (owner instanceof Player player) {
-            finalXpValue = (int) (originalXpValue * player.getAttributeValue(Attributes.XP_GAIN));
+            finalXpValue = (int) (originalXpValue * player.getAttributeValue(GLAttributes.XP_GAIN));
         }
 
         ExperienceOrb.award(level, pos, finalXpValue);

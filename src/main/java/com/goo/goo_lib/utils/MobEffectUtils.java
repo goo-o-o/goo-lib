@@ -10,7 +10,7 @@ import net.minecraft.world.level.Level;
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
-public class EffectUtils {
+public class MobEffectUtils {
 
 
     public record ModValue(Integer value, boolean overwrite) {
@@ -64,7 +64,7 @@ public class EffectUtils {
 
     @Nullable
     public static Entity getEffectSource(Level level, MobEffectInstance effectInstance) {
-        Integer sourceID = ((MixinInterfaces.MobEffectInstanceSourceAccessor) effectInstance).goo_lib$getSourceId();
+        Integer sourceID = ((MixinInterfaces.MobEffectInstanceSourceAccessor) effectInstance).gl$getSourceId();
         if (sourceID != null) {
             return level.getEntity(sourceID);
         }
@@ -72,6 +72,6 @@ public class EffectUtils {
     }
 
     public static void setEffectSource(MobEffectInstance effectInstance, Entity source) {
-        ((MixinInterfaces.MobEffectInstanceSourceAccessor) effectInstance).goo_lib$setSourceId(source.getId());
+        ((MixinInterfaces.MobEffectInstanceSourceAccessor) effectInstance).gl$setSourceId(source.getId());
     }
 }
