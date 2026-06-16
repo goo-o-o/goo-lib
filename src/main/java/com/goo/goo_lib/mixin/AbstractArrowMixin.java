@@ -1,7 +1,7 @@
 package com.goo.goo_lib.mixin;
 
 import com.goo.goo_lib.common.registry.GLAttributes;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,8 +21,8 @@ public abstract class AbstractArrowMixin {
     private float modified$modifyFinalArrowDamage(float finalDamage) {
         AbstractArrow arrow = (AbstractArrow) (Object) this;
 
-        if (arrow.getOwner() instanceof Player player) {
-            return (float) (finalDamage * player.getAttributeValue(GLAttributes.ARROW_DAMAGE));
+        if (arrow.getOwner() instanceof LivingEntity livingEntity) {
+            return (float) (finalDamage * livingEntity.getAttributeValue(GLAttributes.ARROW_DAMAGE));
         }
 
         return finalDamage;

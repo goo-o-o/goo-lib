@@ -1,10 +1,22 @@
 {
+  "attributes.goo_lib.lava_movement_efficiency": "Lava Movement Efficiency",
+  "attributes.goo_lib.lava_movement_efficiency.desc": "Affects how fast you swim in lava, relative to ground speed",
   "attributes.goo_lib.lifesteal": "Lifesteal",
+  "attributes.goo_lib.lifesteal.desc": "Returns a portion of the post-mitigation damage as health",
   "attributes.goo_lib.draw_speed": "Bow Draw Speed",
+  "attributes.goo_lib.draw_speed.desc": "Affects how fast a Bow is drawn",
   "attributes.goo_lib.arrow_velocity": "Arrow Velocity",
+  "attributes.goo_lib.arrow_velocity.desc": "Affects how fast an arrow is shot out",
   "attributes.goo_lib.arrow_damage": "Arrow Damage",
+  "attributes.goo_lib.arrow_damage.desc": "Affects the final damage of arrows",
   "attributes.goo_lib.arrow_gravity": "Arrow Gravity",
+  "attributes.goo_lib.arrow_gravity.desc": "Affects the gravity of arrows",
   "attributes.goo_lib.critical_damage": "Critical Damage",
+  "attributes.goo_lib.critical_damage.desc": "Multiplier on how much damage is done in a Critical Hit",
   "attributes.goo_lib.xp_gain": "XP Gain",
-  "attributes.goo_lib.healing_received": "Healing Received"
+  "attributes.goo_lib.xp_gain.desc": "Multiplier on how much experience you gain from breaking blocks, killing mobs, smelting items, fishing, grindstone usage, advancements, breeding animals and experience bottles",
+  "attributes.goo_lib.villager_reputation": "Villager Reputation",
+  "attributes.goo_lib.villager_reputation.desc": "Affects the sale price of trades, as well as natural Iron Golem hostility",
+  "attributes.goo_lib.healing_received": "Healing Received",
+  "attributes.goo_lib.healing_received.desc": "Multiplier on how much healing is received"
 }

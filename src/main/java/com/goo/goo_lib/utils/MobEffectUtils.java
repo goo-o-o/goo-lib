@@ -25,37 +25,41 @@ public class MobEffectUtils {
      * @param limit        The maximum amplifier of the {@link MobEffect}, inclusive
      * @param ifLimit      The code to run on the {@link LivingEntity} if the limit is reached
      */
-    public static void modifyEffect(LivingEntity livingEntity, Holder<MobEffect> mobEffect, @Nullable ModValue durationMod, @Nullable ModValue amplifierMod, Integer limit, @Nullable Consumer<LivingEntity> ifAbsent, @Nullable Consumer<LivingEntity> ifLimit) {
+    public static void modifyEffect(LivingEntity livingEntity, @org.jetbrains.annotations.Nullable LivingEntity source, Holder<MobEffect> mobEffect,
+                                    @org.jetbrains.annotations.Nullable MobEffectUtils.ModValue durationMod, @org.jetbrains.annotations.Nullable MobEffectUtils.ModValue amplifierMod,
+                                    Integer limit, @org.jetbrains.annotations.Nullable Consumer<LivingEntity> ifAbsent,
+                                    @org.jetbrains.annotations.Nullable Consumer<LivingEntity> ifLimit) {
         if (livingEntity.hasEffect(mobEffect)) {
             MobEffectInstance original = livingEntity.getEffect(mobEffect);
             if (original != null) {
-                if (limit != null && ifLimit != null) {
-                    if (original.getAmplifier() >= limit) {
-                        ifLimit.accept(livingEntity);
-                    }
-                    return;
-                }
 
                 int newDuration = original.getDuration();
-                int newAmplifier = original.getAmplifier();
-
-                if (durationMod != null)
-                    if (durationMod.overwrite()) {
-                        newDuration = durationMod.value;
-                    } else {
-                        newDuration += durationMod.value;
-                    }
-
-                if (amplifierMod != null) {
-                    int value = Math.min(255, amplifierMod.value()); // just in case
-                    if (amplifierMod.overwrite()) {
-                        newAmplifier = value;
-                    } else {
-                        newAmplifier += value;
-                    }
+                if (durationMod != null) {
+                    newDuration = durationMod.overwrite() ? durationMod.value() : newDuration + durationMod.value();
                 }
 
-                livingEntity.addEffect(new MobEffectInstance(mobEffect, newDuration, newAmplifier, original.isAmbient(), original.isVisible(), original.showIcon()));
+                int newAmplifier = original.getAmplifier();
+                if (amplifierMod != null) {
+                    int value = Math.min(255, amplifierMod.value());
+                    newAmplifier = amplifierMod.overwrite() ? value : newAmplifier + value;
+                }
+
+                boolean hitLimit = limit != null && newAmplifier > limit;
+
+                if (hitLimit) {
+                    if (ifLimit != null) {
+                        ifLimit.accept(livingEntity);
+                    }
+
+                    if (!livingEntity.hasEffect(mobEffect)) {
+                        return;
+                    }
+
+                    newAmplifier = limit;
+                }
+
+                livingEntity.addEffect(new MobEffectInstance(mobEffect, newDuration, newAmplifier,
+                        original.isAmbient(), original.isVisible(), original.showIcon()), source);
             }
         } else if (ifAbsent != null) {
             ifAbsent.accept(livingEntity);

@@ -3,7 +3,7 @@ package com.goo.goo_lib.mixin;
 import com.goo.goo_lib.common.registry.GLAttributes;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,8 +17,8 @@ public class EntityMixin {
     )
     private double modified$modifyGravity(double originalGravity) {
         if ((((Entity) (Object) this)) instanceof AbstractArrow abstractArrow) {
-            if (abstractArrow.getOwner() instanceof Player player) {
-                return originalGravity * player.getAttributeValue(GLAttributes.ARROW_GRAVITY);
+            if (abstractArrow.getOwner() instanceof LivingEntity livingEntity) {
+                return originalGravity * livingEntity.getAttributeValue(GLAttributes.ARROW_GRAVITY);
             }
         }
         return originalGravity;

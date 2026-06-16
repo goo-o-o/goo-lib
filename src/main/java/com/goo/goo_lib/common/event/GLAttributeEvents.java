@@ -5,6 +5,7 @@ import com.goo.goo_lib.common.GooLib;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ProjectileWeaponItem;
@@ -25,10 +26,39 @@ public class GLAttributeEvents {
 
     @SubscribeEvent
     public static void addAttributes(EntityAttributeModificationEvent event) {
-        GLAttributes.ATTRIBUTES.getEntries().forEach(attributeDeferredHolder -> {
-            if (!event.has(EntityType.PLAYER, attributeDeferredHolder))
-                event.add(EntityType.PLAYER, attributeDeferredHolder);
-        });
+        for (EntityType<? extends LivingEntity> type : event.getTypes()) {
+            if (!event.has(type, GLAttributes.LAVA_MOVEMENT_EFFICIENCY)) {
+                event.add(type, GLAttributes.LAVA_MOVEMENT_EFFICIENCY);
+            }
+            if (!event.has(type, GLAttributes.LIFESTEAL)) {
+                event.add(type, GLAttributes.LIFESTEAL);
+            }
+            if (!event.has(type, GLAttributes.ARROW_GRAVITY)) {
+                event.add(type, GLAttributes.ARROW_GRAVITY);
+            }
+            if (!event.has(type, GLAttributes.ARROW_DAMAGE)) {
+                event.add(type, GLAttributes.ARROW_DAMAGE);
+            }
+            if (!event.has(type, GLAttributes.ARROW_VELOCITY)) {
+                event.add(type, GLAttributes.ARROW_VELOCITY);
+            }
+            if (!event.has(type, GLAttributes.DRAW_SPEED)) {
+                event.add(type, GLAttributes.DRAW_SPEED);
+            }
+            if (!event.has(type, GLAttributes.HEALING_RECEIVED)) {
+                event.add(type, GLAttributes.HEALING_RECEIVED);
+            }
+        }
+
+        if (!event.has(EntityType.PLAYER, GLAttributes.VILLAGER_REPUTATION)) {
+            event.add(EntityType.PLAYER, GLAttributes.VILLAGER_REPUTATION);
+        }
+        if (!event.has(EntityType.PLAYER, GLAttributes.CRITICAL_DAMAGE)) {
+            event.add(EntityType.PLAYER, GLAttributes.CRITICAL_DAMAGE);
+        }
+        if (!event.has(EntityType.PLAYER, GLAttributes.XP_GAIN)) {
+            event.add(EntityType.PLAYER, GLAttributes.XP_GAIN);
+        }
     }
 
     @SubscribeEvent
@@ -36,11 +66,10 @@ public class GLAttributeEvents {
         DamageSource source = event.getSource();
 
         // Lifesteal
-        if (source.is(DamageTypes.PLAYER_ATTACK)) {
+        if (source.is(DamageTypes.PLAYER_ATTACK) || source.is(DamageTypes.MOB_ATTACK) || source.is(DamageTypes.MOB_ATTACK_NO_AGGRO)) {
             if (source.getDirectEntity() == source.getEntity()) {
-                if (source.getEntity() instanceof Player player) {
-                    player.heal((float) (event.getNewDamage() * player.getAttributeValue(GLAttributes.LIFESTEAL)));
-                }
+                if (source.getEntity() instanceof LivingEntity livingEntity)
+                    livingEntity.heal((float) (event.getNewDamage() * livingEntity.getAttributeValue(GLAttributes.LIFESTEAL)));
             }
         }
     }
@@ -64,37 +93,36 @@ public class GLAttributeEvents {
      */
     @SubscribeEvent
     public static void drawSpeed(LivingEntityUseItemEvent.Tick e) {
-        if (e.getEntity() instanceof Player player) {
-            double drawSpeed = player.getAttributeValue(GLAttributes.DRAW_SPEED);
-            if (drawSpeed == 1.0 || !canBenefitFromDrawSpeed(e.getItem())) return;
+        LivingEntity livingEntity = e.getEntity();
+        double drawSpeed = livingEntity.getAttributeValue(GLAttributes.DRAW_SPEED);
+        if (drawSpeed == 1.0 || !canBenefitFromDrawSpeed(e.getItem())) return;
 
-            // Speed up logic
-            if (drawSpeed > 1.0) {
-                double t = drawSpeed - 1.0;
-                int extraTicks = (int) t;
-                t -= extraTicks;
+        // Speed up logic
+        if (drawSpeed > 1.0) {
+            double t = drawSpeed - 1.0;
+            int extraTicks = (int) t;
+            t -= extraTicks;
 
-                if (extraTicks > 0) {
-                    e.setDuration(e.getDuration() - extraTicks); // Subtract more to speed up countdown
-                }
-                if (t > 0) {
-                    int mod = (int) Math.ceil(1.0 / t);
-                    if (player.tickCount % mod == 0) {
-                        e.setDuration(e.getDuration() - 1);
-                    }
-                }
-                return;
+            if (extraTicks > 0) {
+                e.setDuration(e.getDuration() - extraTicks); // Subtract more to speed up countdown
             }
-
-            // Slow down logic
-            if (drawSpeed < 1.0 && drawSpeed > 0) {
-                int mod = (int) Math.round(1.0 / drawSpeed); // 0.1 becomes 10, 0.25 becomes 4
-
-                // Only let the tick pass if the modulo matches.
-                // On every other tick, counteract Minecraft's natural subtraction by adding 1.
-                if (player.tickCount % mod != 0) {
-                    e.setDuration(e.getDuration() + 1);
+            if (t > 0) {
+                int mod = (int) Math.ceil(1.0 / t);
+                if (livingEntity.tickCount % mod == 0) {
+                    e.setDuration(e.getDuration() - 1);
                 }
+            }
+            return;
+        }
+
+        // Slow down logic
+        if (drawSpeed < 1.0 && drawSpeed > 0) {
+            int mod = (int) Math.round(1.0 / drawSpeed); // 0.1 becomes 10, 0.25 becomes 4
+
+            // Only let the tick pass if the modulo matches.
+            // On every other tick, counteract Minecraft's natural subtraction by adding 1.
+            if (livingEntity.tickCount % mod != 0) {
+                e.setDuration(e.getDuration() + 1);
             }
         }
     }

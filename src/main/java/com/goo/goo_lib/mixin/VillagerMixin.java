@@ -1,8 +1,10 @@
 package com.goo.goo_lib.mixin;
 
 import com.goo.goo_lib.common.registry.GLAttributes;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,5 +19,13 @@ public class VillagerMixin {
             return new ExperienceOrb(level, x, y, z, (int) (value * trader.getTradingPlayer().getAttributeValue(GLAttributes.XP_GAIN)));
         }
         return new ExperienceOrb(level, x, y, z, value);
+    }
+
+
+    @ModifyExpressionValue(method = "updateSpecialPrices", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/Villager;getPlayerReputation(Lnet/minecraft/world/entity/player/Player;)I"))
+    private int increaseReputation(int original, Player player) {
+        // adapted from Artifacts mod
+        return original + (int) player.getAttributeValue(GLAttributes.VILLAGER_REPUTATION);
+
     }
 }

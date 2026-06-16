@@ -4,6 +4,7 @@ import com.goo.goo_lib.common.GooLib;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 import net.neoforged.neoforge.common.PercentageAttribute;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -14,6 +15,16 @@ public class GLAttributes {
     private static String prepend(String name){
         return "attributes." + GooLib.MOD_ID + "." + name;
     }
+
+    public static final Holder<Attribute> VILLAGER_REPUTATION = ATTRIBUTES.register("villager_reputation", () -> new RangedAttribute(
+            prepend("villager_reputation"),
+            0, -10000, 10000
+    ));
+
+    public static final Holder<Attribute> LAVA_MOVEMENT_EFFICIENCY = ATTRIBUTES.register("lava_movement_efficiency", () -> new PercentageAttribute(
+            prepend("lava_movement_efficiency"),
+            0, 0.0, 1.0
+    ).setSyncable(true));
 
     public static final Holder<Attribute> LIFESTEAL = ATTRIBUTES.register("lifesteal", () -> new PercentageAttribute(
             prepend("lifesteal"),
@@ -54,4 +65,5 @@ public class GLAttributes {
     ));
 
 
+    // TODO: Backport friction
 }
