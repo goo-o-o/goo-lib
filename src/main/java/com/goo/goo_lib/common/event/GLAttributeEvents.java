@@ -6,14 +6,13 @@ import com.goo.goo_lib.common.registry.GLAttributes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.TridentItem;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.GrindstoneEvent;
@@ -72,35 +71,17 @@ public class GLAttributeEvents {
     public static void onEntityJoinWorld(EntityJoinLevelEvent event) {
         if (!event.getLevel().isClientSide()) {
             if (event.getEntity() instanceof Projectile projectile) {
-                ItemStack weapon = projectile.getWeaponItem();
-                if (weapon != null && !weapon.isEmpty()) {
-                    ItemAttributeModifiers modifiers = weapon.getAttributeModifiers();
-                    if (projectile.getOwner() instanceof LivingEntity owner) {
-                        EquipmentSlot slot = null;
-                        if (ItemStack.isSameItemSameComponents(owner.getMainHandItem(), weapon)) slot = EquipmentSlot.MAINHAND;
-                        else if (ItemStack.isSameItemSameComponents(owner.getOffhandItem(), weapon)) slot = EquipmentSlot.OFFHAND;
+                if (projectile.getOwner() instanceof LivingEntity owner) {
 
-                        if (slot == null) return;
-
-                        float baseValue = (float) owner.getAttributeBaseValue(GLAttributes.ARROW_GRAVITY); // all living entities should have this
-                        float finalGravityValue = baseValue;
-
-                        for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
-                            if (entry.slot().test(slot)) {
-                                if (entry.attribute().is(Objects.requireNonNull(GLAttributes.ARROW_GRAVITY.getKey()))) {
-                                    double amount = entry.modifier().amount();
-
-                                    finalGravityValue += (float) switch (entry.modifier().operation()) {
-                                        case ADD_VALUE -> amount;
-                                        case ADD_MULTIPLIED_BASE -> amount * baseValue;
-                                        case ADD_MULTIPLIED_TOTAL -> amount * finalGravityValue;
-                                    };
-                                }
-                            }
-                        }
-
-                        projectile.setData(GLAttachments.ARROW_GRAVITY, finalGravityValue);
+                    if (owner.getAttributes().hasAttribute(GLAttributes.ARROW_GRAVITY)) {
+                        projectile.setData(GLAttachments.ARROW_GRAVITY,
+                                (float) Objects.requireNonNull(owner.getAttribute(GLAttributes.ARROW_GRAVITY)).getValue());
                     }
+
+                    if (owner.getAttributes().hasAttribute(GLAttributes.ARROW_DAMAGE) && projectile instanceof AbstractArrow arrow) {
+                        arrow.setBaseDamage(arrow.getBaseDamage() * owner.getAttributeValue(GLAttributes.ARROW_DAMAGE));
+                    }
+
                 }
             }
         }
