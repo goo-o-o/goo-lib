@@ -2,6 +2,7 @@ package com.goo.goo_lib.common;
 
 
 import com.goo.goo_lib.common.registry.GLAttributes;
+import com.goo.goo_lib.common.registry.GLAttachments;
 import com.goo.goo_lib.common.registry.TextEffects;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
@@ -20,6 +21,7 @@ public class GooLib {
 
     public GooLib(IEventBus modEventBus, ModContainer modContainer) {
         GLAttributes.ATTRIBUTES.register(modEventBus);
+        GLAttachments.ATTACHMENT_TYPES.register(modEventBus);
         TextEffects.init(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
     }
