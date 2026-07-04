@@ -1,10 +1,9 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.client.registry.GLShaders;
-import com.goo.goo_lib.utils.text.StyleEffectContainer;
-import com.goo.goo_lib.utils.text.StyleEffectUtils;
-import com.goo.goo_lib.utils.text.effect.base.ConfiguredEffect;
-import com.goo.goo_lib.utils.text.effect.base.OverlayEffect;
+import com.goo.goo_lib.client.text.StyleEffectContainer;
+import com.goo.goo_lib.client.text.StyleEffectUtils;
+import com.goo.goo_lib.client.text.effect.base.ConfiguredEffect;
+import com.goo.goo_lib.client.text.effect.base.OverlayEffect;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -30,6 +29,7 @@ public abstract class StringRenderOutputMixin {
     @Inject(method = "finish", at = @At("TAIL"))
     private void clearBufferSource(int backgroundColor, float x, CallbackInfoReturnable<Float> cir) {
         StyleEffectUtils.CURRENT_BUFFER_SOURCE.remove();
+        StyleEffectUtils.resetCurrentStyle();
     }
 
     @Redirect(
@@ -53,8 +53,6 @@ public abstract class StringRenderOutputMixin {
         }
 
         if (specialType != null) {
-            float time = (float)(System.currentTimeMillis() % 10000) / 10000.0f;
-            GLShaders.updateGameTime(time);
             return bufferSource.getBuffer(specialType);
         }
         return bufferSource.getBuffer(renderType);

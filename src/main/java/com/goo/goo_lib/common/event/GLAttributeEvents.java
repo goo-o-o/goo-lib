@@ -54,6 +54,21 @@ public class GLAttributeEvents {
             if (!event.has(type, GLAttributes.HEALING_RECEIVED)) {
                 event.add(type, GLAttributes.HEALING_RECEIVED);
             }
+            if (!event.has(type, GLAttributes.FRICTION_MODIFIER)) {
+                event.add(type, GLAttributes.FRICTION_MODIFIER);
+            }
+            if (!event.has(type, GLAttributes.AIR_DRAG_MODIFIER)) {
+                event.add(type, GLAttributes.AIR_DRAG_MODIFIER);
+            }
+            if (!event.has(type, GLAttributes.BOAT_SPEED_MODIFIER)) {
+                event.add(type, GLAttributes.BOAT_SPEED_MODIFIER);
+            }
+            if (!event.has(type, GLAttributes.CLIMBING_SPEED_MODIFIER)) {
+                event.add(type, GLAttributes.CLIMBING_SPEED_MODIFIER);
+            }
+            if (!event.has(type, GLAttributes.WALL_CLIMBING)) {
+                event.add(type, GLAttributes.WALL_CLIMBING);
+            }
         }
 
         if (!event.has(EntityType.PLAYER, GLAttributes.VILLAGER_REPUTATION)) {
@@ -65,6 +80,8 @@ public class GLAttributeEvents {
         if (!event.has(EntityType.PLAYER, GLAttributes.XP_GAIN)) {
             event.add(EntityType.PLAYER, GLAttributes.XP_GAIN);
         }
+
+
     }
 
     @SubscribeEvent
@@ -121,34 +138,20 @@ public class GLAttributeEvents {
     public static void drawSpeed(LivingEntityUseItemEvent.Tick e) {
         LivingEntity livingEntity = e.getEntity();
         double drawSpeed = livingEntity.getAttributeValue(GLAttributes.DRAW_SPEED);
-        if (drawSpeed == 1.0 || !canBenefitFromDrawSpeed(e.getItem())) return;
+        if (drawSpeed <= 1.0 || !canBenefitFromDrawSpeed(e.getItem())) return;
 
-        // Speed up logic
-        if (drawSpeed > 1.0) {
-            double t = drawSpeed - 1.0;
-            int extraTicks = (int) t;
-            t -= extraTicks;
+        // Fast draw logic remains safe and smooth because it accelerates the countdown downward
+        double t = drawSpeed - 1.0;
+        int extraTicks = (int) t;
+        t -= extraTicks;
 
-            if (extraTicks > 0) {
-                e.setDuration(e.getDuration() - extraTicks); // Subtract more to speed up countdown
-            }
-            if (t > 0) {
-                int mod = (int) Math.ceil(1.0 / t);
-                if (livingEntity.tickCount % mod == 0) {
-                    e.setDuration(e.getDuration() - 1);
-                }
-            }
-            return;
+        if (extraTicks > 0) {
+            e.setDuration(e.getDuration() - extraTicks);
         }
-
-        // Slow down logic
-        if (drawSpeed < 1.0 && drawSpeed > 0) {
-            int mod = (int) Math.round(1.0 / drawSpeed); // 0.1 becomes 10, 0.25 becomes 4
-
-            // Only let the tick pass if the modulo matches.
-            // On every other tick, counteract Minecraft's natural subtraction by adding 1.
-            if (livingEntity.tickCount % mod != 0) {
-                e.setDuration(e.getDuration() + 1);
+        if (t > 0) {
+            int mod = (int) Math.ceil(1.0 / t);
+            if (livingEntity.tickCount % mod == 0) {
+                e.setDuration(e.getDuration() - 1);
             }
         }
     }

@@ -5,6 +5,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.RangedAttribute;
+import net.neoforged.neoforge.common.BooleanAttribute;
 import net.neoforged.neoforge.common.PercentageAttribute;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -64,6 +65,32 @@ public class GLAttributes {
             1, 0, 10000
     ));
 
+    public static final Holder<Attribute> FRICTION_MODIFIER = ATTRIBUTES.register("friction_modifier", () -> new PercentageAttribute(
+            prepend("friction_modifier"),
+            1, 0, 10000
+    ).setSyncable(true).setSentiment(Attribute.Sentiment.NEUTRAL));
 
-    // TODO: Backport friction
+
+    public static final Holder<Attribute> AIR_DRAG_MODIFIER = ATTRIBUTES.register("air_drag_modifier", () -> new PercentageAttribute(
+            prepend("air_drag_modifier"),
+            1, 0, 10000
+    ).setSyncable(true).setSentiment(Attribute.Sentiment.NEUTRAL));
+
+  
+
+    public static final Holder<Attribute> BOAT_SPEED_MODIFIER = ATTRIBUTES.register("boat_speed_modifier", () -> new PercentageAttribute(
+            prepend("boat_speed_modifier"),
+            1, 0, 1000
+    ).setSyncable(true));
+
+    public static final Holder<Attribute> WALL_CLIMBING = ATTRIBUTES.register("wall_climbing", () -> new BooleanAttribute(
+            prepend("wall_climbing"),
+            false
+    ).setSyncable(true));
+
+    public static final Holder<Attribute> CLIMBING_SPEED_MODIFIER = ATTRIBUTES.register("climbing_speed_modifier", () -> new PercentageAttribute(
+            prepend("climbing_speed_modifier"),
+            1, 0, 1000
+    ).setSyncable(true));
+
 }

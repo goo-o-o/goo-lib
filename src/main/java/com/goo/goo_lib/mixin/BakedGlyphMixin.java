@@ -1,10 +1,10 @@
 package com.goo.goo_lib.mixin;
 
 import com.goo.goo_lib.utils.RenderUtils;
-import com.goo.goo_lib.utils.text.GlyphVertexData;
-import com.goo.goo_lib.utils.text.StyleEffectContainer;
-import com.goo.goo_lib.utils.text.StyleEffectUtils;
-import com.goo.goo_lib.utils.text.effect.base.ConfiguredEffect;
+import com.goo.goo_lib.client.text.GlyphVertexData;
+import com.goo.goo_lib.client.text.StyleEffectContainer;
+import com.goo.goo_lib.client.text.StyleEffectUtils;
+import com.goo.goo_lib.client.text.effect.base.ConfiguredEffect;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.network.chat.Style;
@@ -53,13 +53,11 @@ public abstract class BakedGlyphMixin {
 
         Style currentStyle = StyleEffectUtils.CURRENT_STYLE.get();
         if (currentStyle == null) {
-            StyleEffectUtils.resetCurrentStyle();
             return;
         }
 
         List<ConfiguredEffect<?>> activeEffects = ((StyleEffectContainer) currentStyle).gl$getEffects();
         if (activeEffects == null || activeEffects.isEmpty()) {
-            StyleEffectUtils.resetCurrentStyle();
             return;
         }
 
@@ -89,6 +87,5 @@ public abstract class BakedGlyphMixin {
         RenderUtils.writeQuad(pBuffer, pMatrix, vertexData, pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
 
 
-        StyleEffectUtils.resetCurrentStyle();
     }
 }

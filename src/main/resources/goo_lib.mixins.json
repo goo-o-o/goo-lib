@@ -2,6 +2,9 @@
   "required": true,
   "package": "com.goo.goo_lib.mixin",
   "compatibilityLevel": "JAVA_21",
+  "mixinextras": {
+    "minVersion": "0.5.3"
+  },
   "mixins": [
     "AbstractFurnaceBlockEntityMixin",
     "AbstractSkeletonMixin",
@@ -9,17 +12,26 @@
     "AnimalMixin",
     "AttributeInstanceMixin",
     "AttributeMapMixin",
+    "BlockStateBaseMixin",
+    "BoatMixin",
     "ClientboundSetEntityMotionPacketAccessor",
     "ClientboundSetEntityMotionPacketMixin",
+    "CommonHooksMixin",
     "EntityMixin",
+    "FallLocationMixin",
     "FishingHookMixin",
     "LivingEntityMixin",
     "MobEffectInstanceMixin",
+    "PlayerMixin",
     "ProjectileWeaponItemMixin",
+    "ServerGamePacketListenerImplMixin",
+    "ServerPlayerMixin",
     "StyleMixin",
+    "StyleSerializerMixin",
     "ThrownExperienceBottleMixin",
     "VillagerMixin",
-    "WanderingTraderMixin"
+    "WanderingTraderMixin",
+    "StyleAccessorMixin"
   ],
   "client": [
     "BakedGlyphMixin",
@@ -28,6 +40,9 @@
     "CompositeStateAccessor",
     "FontMixin",
     "ItemInHandRendererMixin",
+    "LevelRendererMixin",
+    "LocalPlayerMixin",
+    "PlayerRendererMixin",
     "StringRenderOutputMixin"
   ],
   "injectors": {
