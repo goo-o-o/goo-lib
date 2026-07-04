@@ -24,5 +24,6 @@ public class GooLibClient {
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
         PostEffectRegistry.registerEffect(GLRenderTypes.BLUR_SHADER_LOCATION);
+        PostEffectRegistry.registerEffect(GLRenderTypes.BLOOM_SHADER_LOCATION);
     }
 }

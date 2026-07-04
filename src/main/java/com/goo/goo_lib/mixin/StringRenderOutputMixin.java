@@ -41,20 +41,20 @@ public abstract class StringRenderOutputMixin {
     )
     private VertexConsumer onStartRender(MultiBufferSource bufferSource, RenderType renderType,
                                          int index, Style style, int codePoint) {
+        if (style == null) return bufferSource.getBuffer(renderType);
         StyleEffectUtils.CURRENT_STYLE.set(style);
-        List<ConfiguredEffect<?>> activeEffects = ((StyleEffectContainer) style).gl$getEffects();
 
-        RenderType specialType = null;
+        List<ConfiguredEffect<?>> activeEffects = ((StyleEffectContainer) style).gl$getEffects();
+        if (activeEffects == null || activeEffects.isEmpty()) return bufferSource.getBuffer(renderType);
+
         for (ConfiguredEffect<?> configuredEffect : activeEffects) {
             if (configuredEffect.getEffect() instanceof OverlayEffect overlay) {
-                specialType = overlay.getOverlayRenderType(renderType);
+                RenderType overlayType = overlay.getOverlayRenderType(renderType);
+                StyleEffectUtils.CURRENT_BLOOM_TYPE.set(overlayType); // stash for render()
                 break;
             }
         }
 
-        if (specialType != null) {
-            return bufferSource.getBuffer(specialType);
-        }
-        return bufferSource.getBuffer(renderType);
+        return bufferSource.getBuffer(renderType); // always return normal buffer here
     }
 }

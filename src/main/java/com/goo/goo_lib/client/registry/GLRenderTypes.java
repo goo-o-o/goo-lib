@@ -43,6 +43,24 @@ public class GLRenderTypes {
 
     // ── Custom Dynamic Library Text Shaders ───────────────────────────────
 
+    public static RenderType getBloom(RenderType sourceType) {
+        return RenderType.create(
+                GooLib.MOD_ID + ":text_bloom",
+                DefaultVertexFormat.POSITION_TEX_COLOR,
+                VertexFormat.Mode.QUADS,
+                256,
+                false,
+                false,
+                RenderType.CompositeState.builder()
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getTextBloomShader))
+                        .setTextureState(((CompositeStateAccessor) (Object) ((CompositeRenderTypeAccessor) sourceType).getState()).getTextureState())
+                        .setTransparencyState(ADDITIVE_TRANSPARENCY)
+                        .setDepthTestState(NO_DEPTH_TEST) // needed for overlay elements
+                        .setOutputState(BLOOM_OUTPUT) // crucial: forces this text pass into your bloom target
+                        .createCompositeState(false) // false means no sorting overhead, great for 2D UI elements
+        );
+    }
+
     public static RenderType getNeon(RenderType source) {
         return createTextRenderType("neon", source, InternalShaders::getTextBloomShader);
     }
@@ -166,6 +184,22 @@ public class GLRenderTypes {
                         .createCompositeState(true)
         );
     }
+    public static RenderType getBloomRenderType(ResourceLocation locationIn) { return getBloomRenderType(locationIn, LEQUAL_DEPTH_TEST); }
+    public static RenderType getBloomRenderType(ResourceLocation locationIn, DepthTestStateShard depthTestStateShard) {
+        return RenderType.create(
+                GooLib.MOD_ID + ":bloom_" + depthTestStateShard,
+                DefaultVertexFormat.POSITION_TEX_COLOR,
+                VertexFormat.Mode.QUADS,
+                256, false, true,
+                RenderType.CompositeState.builder()
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeBlurShader))
+                        .setTextureState(new RenderStateShard.TextureStateShard(locationIn, false, false))
+                        .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                        .setDepthTestState(depthTestStateShard)
+                        .setOutputState(BLOOM_OUTPUT)
+                        .createCompositeState(true)
+        );
+    }
 
     /**
      * Post Effects
@@ -179,13 +213,21 @@ public class GLRenderTypes {
             target.bindWrite(false);
         }
     }, () -> Minecraft.getInstance().getMainRenderTarget().bindWrite(false));
+    public static final ResourceLocation BLOOM_SHADER_LOCATION = GooLib.loc("shaders/post/bloom.json");
+    protected static final RenderStateShard.OutputStateShard BLOOM_OUTPUT = new RenderStateShard.OutputStateShard("bloom_target", () -> {
+        RenderTarget target = PostEffectRegistry.getTempTarget(BLOOM_SHADER_LOCATION, "input");
+        if (target != null) {
+            target.copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
+            target.bindWrite(false);
+        }
+    }, () -> Minecraft.getInstance().getMainRenderTarget().bindWrite(false));
 
     // ── Global Shader Registration Loop ───────────────────────────────────
 
     @SubscribeEvent
     public static void registerShaders(RegisterShadersEvent event) {
         try {
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_neon"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setTextBloomShader);
+            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_bloom"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setTextBloomShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_flame"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeFlameShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_abyssal"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeAbyssalShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_blur"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeBlurShader);
@@ -204,7 +246,7 @@ public class GLRenderTypes {
 
     // ── Encapsulated Internal Shader State Holder ─────────────────────────
 
-    private static class InternalShaders {
+    public static class InternalShaders {
         private static ShaderInstance renderTypeNeonShader;
         private static ShaderInstance renderTypeFlameShader;
         private static ShaderInstance renderTypeAbyssalShader;

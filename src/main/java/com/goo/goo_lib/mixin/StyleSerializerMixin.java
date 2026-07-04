@@ -40,7 +40,7 @@ public abstract class StyleSerializerMixin {
                 return style; // nothing to attach, safe to return shared instance as-is
             }
             Style fresh = StyleEffectUtils.copyOf(style);
-            ((StyleEffectContainer) (Object) fresh).gl$setEffects(effects);
+            ((StyleEffectContainer) fresh).gl$setEffects(effects);
             return fresh;
         }));
     }

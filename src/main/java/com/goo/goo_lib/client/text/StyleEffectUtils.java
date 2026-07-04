@@ -3,6 +3,7 @@ package com.goo.goo_lib.client.text;
 import com.goo.goo_lib.client.text.effect.base.ConfiguredEffect;
 import com.goo.goo_lib.mixin.StyleAccessorMixin;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 
@@ -11,6 +12,7 @@ import java.util.List;
 public class StyleEffectUtils {
 
     public static final ThreadLocal<MultiBufferSource> CURRENT_BUFFER_SOURCE = new ThreadLocal<>();
+    public static final ThreadLocal<RenderType> CURRENT_BLOOM_TYPE = new ThreadLocal<>();
     public static final ThreadLocal<Style> CURRENT_STYLE = ThreadLocal.withInitial(() -> Style.EMPTY);
 
     /**

@@ -1,6 +1,7 @@
 package com.goo.goo_lib.client.text.effect;
 
 import com.goo.goo_lib.client.registry.GLRenderTypes;
+import com.goo.goo_lib.client.registry.PostEffectRegistry;
 import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.client.text.effect.base.OverlayEffect;
 import com.goo.goo_lib.client.text.effect.config.BloomConfig;
@@ -21,6 +22,7 @@ public class BloomEffect implements TextEffect<BloomConfig>, OverlayEffect {
 
     @Override
     public RenderType getOverlayRenderType(RenderType sourceType) {
-        return GLRenderTypes.getNeon(sourceType);
+        PostEffectRegistry.renderEffectForNextTick(GLRenderTypes.BLOOM_SHADER_LOCATION);
+        return GLRenderTypes.getBloom(sourceType);
     }
 }

@@ -38,7 +38,7 @@ public class StyleMixin implements StyleEffectContainer {
     )
     private Style gl$propagateEffects(Style result) {
         if (result != (Object) this) {
-            var effects = this.gl$getEffects();
+            List<ConfiguredEffect<?>> effects = this.gl$getEffects();
             if (!effects.isEmpty()) {
                 ((StyleEffectContainer) result).gl$setEffects(effects);
             }

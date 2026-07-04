@@ -13,5 +13,6 @@ void main() {
     gl_Position = vec4(outPos.xy, 0.2, 1.0);
 
     oneTexel = 1.0 / InSize;
-    texCoord = Position.xy / InSize;
+    // Convert from clip space (-1 to 1) back to UV (0 to 1)
+    texCoord = outPos.xy * 0.5 + 0.5;
 }
