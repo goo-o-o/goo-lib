@@ -2,13 +2,11 @@ package com.goo.goo_lib.mixin;
 
 import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.client.text.StyleEffectContainer;
-import com.goo.goo_lib.client.text.StyleEffectUtils;
+import com.goo.goo_lib.util.StyleEffectUtil;
 import com.goo.goo_lib.client.text.effect.base.ConfiguredEffect;
-import com.goo.goo_lib.utils.RenderUtils;
+import com.goo.goo_lib.util.RenderUtil;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.font.glyphs.BakedGlyph;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Style;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
@@ -53,7 +51,7 @@ public abstract class BakedGlyphMixin {
                        VertexConsumer pBuffer, float pRed, float pGreen, float pBlue,
                        float pAlpha, int pPackedLight, CallbackInfo ci) {
 
-        Style currentStyle = StyleEffectUtils.CURRENT_STYLE.get();
+        Style currentStyle = StyleEffectUtil.CURRENT_STYLE.get();
         if (currentStyle == null) {
             return;
         }
@@ -86,14 +84,17 @@ public abstract class BakedGlyphMixin {
         for (ConfiguredEffect<?> configuredEffect : activeEffects) {
             configuredEffect.run(vertexData, pX, pY, dimFactor);
         }
-        RenderUtils.writeQuad(pBuffer, pMatrix, vertexData, pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
+        RenderUtil.writeQuad(pBuffer, pMatrix, vertexData, pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
 
-        MultiBufferSource bufferSource = StyleEffectUtils.CURRENT_BUFFER_SOURCE.get();
-        RenderType bloomType = StyleEffectUtils.CURRENT_BLOOM_TYPE.get();
-        if (bufferSource != null && bloomType != null) {
-            VertexConsumer bloomBuffer = bufferSource.getBuffer(bloomType);
-            RenderUtils.writeQuad(bloomBuffer, pMatrix, vertexData, pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
-            StyleEffectUtils.CURRENT_BLOOM_TYPE.remove();
+        // ── Secondary overlay passes (bloom, fire, fog, …) ────────────────────
+
+        List<StyleEffectUtil.OverlayPass> passes = StyleEffectUtil.OVERLAY_PASSES.get();
+        if (passes != null) {
+            for (StyleEffectUtil.OverlayPass pass : passes) {
+                VertexConsumer overlayBuffer = StyleEffectUtil.TEXT_EFFECT_BUFFER.getBuffer(pass.renderType());
+                RenderUtil.writeQuad(overlayBuffer, pMatrix, vertexData, pass.alpha() * pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
+            }
+            StyleEffectUtil.OVERLAY_PASSES.remove();
         }
     }
 }

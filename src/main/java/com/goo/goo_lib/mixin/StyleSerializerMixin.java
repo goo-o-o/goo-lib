@@ -1,7 +1,7 @@
 package com.goo.goo_lib.mixin;
 
 import com.goo.goo_lib.client.text.StyleEffectContainer;
-import com.goo.goo_lib.client.text.StyleEffectUtils;
+import com.goo.goo_lib.util.StyleEffectUtil;
 import com.goo.goo_lib.common.registry.TextEffects;
 import com.mojang.datafixers.kinds.App;
 import com.mojang.serialization.MapCodec;
@@ -39,7 +39,7 @@ public abstract class StyleSerializerMixin {
             if (effects.isEmpty()) {
                 return style; // nothing to attach, safe to return shared instance as-is
             }
-            Style fresh = StyleEffectUtils.copyOf(style);
+            Style fresh = StyleEffectUtil.copyOf(style);
             ((StyleEffectContainer) fresh).gl$setEffects(effects);
             return fresh;
         }));

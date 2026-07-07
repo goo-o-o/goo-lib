@@ -1,8 +1,8 @@
-package com.goo.goo_lib.utils;
+package com.goo.goo_lib.util;
 
 import org.spongepowered.asm.mixin.Unique;
 
-public class MathUtils {
+public class MathUtil {
     @Unique
     public static float toFloat(int hbits) {
 

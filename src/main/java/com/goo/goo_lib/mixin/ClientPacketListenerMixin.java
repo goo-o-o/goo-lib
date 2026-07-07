@@ -1,7 +1,7 @@
 package com.goo.goo_lib.mixin;
 
 
-import com.goo.goo_lib.utils.MathUtils;
+import com.goo.goo_lib.util.MathUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -39,9 +39,9 @@ public abstract class ClientPacketListenerMixin {
             if (entity != null) {
                 ClientboundSetEntityMotionPacketAccessor accessor = (ClientboundSetEntityMotionPacketAccessor) packet;
 
-                float xVal = MathUtils.toFloat(accessor.getRawXa());
-                float yVal = MathUtils.toFloat(accessor.getRawYa());
-                float zVal = MathUtils.toFloat(accessor.getRawZa());
+                float xVal = MathUtil.toFloat(accessor.getRawXa());
+                float yVal = MathUtil.toFloat(accessor.getRawYa());
+                float zVal = MathUtil.toFloat(accessor.getRawZa());
 
                 entity.lerpMotion(xVal, yVal, zVal);
             }

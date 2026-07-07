@@ -1,4 +1,4 @@
-package com.goo.goo_lib.utils;
+package com.goo.goo_lib.util;
 
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
@@ -10,7 +10,7 @@ import net.minecraft.world.level.Level;
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
-public class MobEffectUtils {
+public class MobEffectUtil {
 
 
     public record ModValue(Integer value, boolean overwrite) {
@@ -26,7 +26,7 @@ public class MobEffectUtils {
      * @param ifLimit      The code to run on the {@link LivingEntity} if the limit is reached
      */
     public static void modifyEffect(LivingEntity livingEntity, @org.jetbrains.annotations.Nullable LivingEntity source, Holder<MobEffect> mobEffect,
-                                    @org.jetbrains.annotations.Nullable MobEffectUtils.ModValue durationMod, @org.jetbrains.annotations.Nullable MobEffectUtils.ModValue amplifierMod,
+                                    @org.jetbrains.annotations.Nullable MobEffectUtil.ModValue durationMod, @org.jetbrains.annotations.Nullable MobEffectUtil.ModValue amplifierMod,
                                     Integer limit, @org.jetbrains.annotations.Nullable Consumer<LivingEntity> ifAbsent,
                                     @org.jetbrains.annotations.Nullable Consumer<LivingEntity> ifLimit) {
         if (livingEntity.hasEffect(mobEffect)) {

@@ -11,18 +11,18 @@ uniform float Spread;
 
 void main() {
     vec2 texelIn = 1.0 / InSize;
-    float spread = Spread; // increase this for wider spread
+    vec2 spread = vec2(Spread * 2.0, Spread); // increase this for wider spread
 
     vec4 color = vec4(0.0);
-    color += texture(DiffuseSampler, texCoord + vec2(-texelIn.x * spread,  texelIn.y * spread)) * 0.125;
-    color += texture(DiffuseSampler, texCoord + vec2( 0.0,                 texelIn.y * spread)) * 0.125;
-    color += texture(DiffuseSampler, texCoord + vec2( texelIn.x * spread,  texelIn.y * spread)) * 0.125;
-    color += texture(DiffuseSampler, texCoord + vec2(-texelIn.x * spread,  0.0              )) * 0.125;
+    color += texture(DiffuseSampler, texCoord + vec2(-texelIn.x * spread.x,  texelIn.y * spread.y)) * 0.125;
+    color += texture(DiffuseSampler, texCoord + vec2( 0.0,                   texelIn.y   * spread.y)) * 0.125;
+    color += texture(DiffuseSampler, texCoord + vec2( texelIn.x * spread.x,  texelIn.y * spread.y)) * 0.125;
+    color += texture(DiffuseSampler, texCoord + vec2(-texelIn.x * spread.x,  0.0              )) * 0.125;
     color += texture(DiffuseSampler, texCoord                                                 ) * 0.125;
-    color += texture(DiffuseSampler, texCoord + vec2( texelIn.x * spread,  0.0              )) * 0.125;
-    color += texture(DiffuseSampler, texCoord + vec2(-texelIn.x * spread, -texelIn.y * spread)) * 0.125;
-    color += texture(DiffuseSampler, texCoord + vec2( 0.0,                -texelIn.y * spread)) * 0.125;
-    color += texture(DiffuseSampler, texCoord + vec2( texelIn.x * spread, -texelIn.y * spread)) * 0.125;
+    color += texture(DiffuseSampler, texCoord + vec2( texelIn.x * spread.x,  0.0              )) * 0.125;
+    color += texture(DiffuseSampler, texCoord + vec2(-texelIn.x * spread.x, -texelIn.y * spread.y)) * 0.125;
+    color += texture(DiffuseSampler, texCoord + vec2( 0.0,                  -texelIn.y   * spread.y)) * 0.125;
+    color += texture(DiffuseSampler, texCoord + vec2( texelIn.x * spread.x, -texelIn.y * spread.y)) * 0.125;
 
     fragColor = color;
 }

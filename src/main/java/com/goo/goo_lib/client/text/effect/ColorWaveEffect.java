@@ -1,6 +1,6 @@
 package com.goo.goo_lib.client.text.effect;
 
-import com.goo.goo_lib.utils.ColorUtils;
+import com.goo.goo_lib.util.ColorUtil;
 import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.client.text.effect.config.GradientConfig;
 
@@ -11,8 +11,8 @@ public class ColorWaveEffect implements TextEffect<GradientConfig> {
         float rightWorldX = pX + vertexData.positions[2].x;
 
         // Pulling dynamic settings straight from the config template
-        int colorLeft = ColorUtils.getGradientAt(leftWorldX, config.spread(), config.waveSpeed(), config.colors());
-        int colorRight = ColorUtils.getGradientAt(rightWorldX, config.spread(), config.waveSpeed(), config.colors());
+        int colorLeft = ColorUtil.getGradientAt(leftWorldX, config.spread(), config.waveSpeed(), config.colors());
+        int colorRight = ColorUtil.getGradientAt(rightWorldX, config.spread(), config.waveSpeed(), config.colors());
 
         applyRGB(vertexData, 0, colorLeft, dimFactor);
         applyRGB(vertexData, 1, colorLeft, dimFactor);

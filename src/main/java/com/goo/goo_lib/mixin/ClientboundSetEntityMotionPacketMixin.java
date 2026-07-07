@@ -1,7 +1,7 @@
 package com.goo.goo_lib.mixin;
 
 
-import com.goo.goo_lib.utils.MathUtils;
+import com.goo.goo_lib.util.MathUtil;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
@@ -33,9 +33,9 @@ public abstract class ClientboundSetEntityMotionPacketMixin {
         // CoFH Core already implements this fix. If it's present, we step back
         // to avoid double-processing or conflicts.
         if (!ModList.get().isLoaded("cofh_core")) {
-            this.xa = MathUtils.packHalfFloat((float) velocity.x);
-            this.ya = MathUtils.packHalfFloat((float) velocity.y);
-            this.za = MathUtils.packHalfFloat((float) velocity.z);
+            this.xa = MathUtil.packHalfFloat((float) velocity.x);
+            this.ya = MathUtil.packHalfFloat((float) velocity.y);
+            this.za = MathUtil.packHalfFloat((float) velocity.z);
         }
     }
 

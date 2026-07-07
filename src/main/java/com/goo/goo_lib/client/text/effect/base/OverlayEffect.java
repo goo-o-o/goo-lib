@@ -1,22 +1,21 @@
 package com.goo.goo_lib.client.text.effect.base;
 
+import com.goo.goo_lib.client.text.effect.config.base.EffectConfig;
 import net.minecraft.client.renderer.RenderType;
 
 public interface OverlayEffect {
-    /**
-     * Renders over original using another render type
-     *
-     * @param sourceType
-     * @return
-     */
+    /** Returns the render type to use for the secondary overlay pass. */
     RenderType getOverlayRenderType(RenderType sourceType);
 
     /**
-     * Replaces the original render type
-     *
-     * @param sourceType
-     * @return
+     * Alpha multiplier applied to the overlay quad. Override to use config-driven values.
+     * The config passed is this effect's own config object.
      */
+    default float getOverlayAlpha(EffectConfig config) {
+        return 1.0f;
+    }
+
+    /** Replaces the original render type instead of adding a pass. */
     default RenderType modifyOriginalRenderType(RenderType sourceType) {
         return sourceType;
     }

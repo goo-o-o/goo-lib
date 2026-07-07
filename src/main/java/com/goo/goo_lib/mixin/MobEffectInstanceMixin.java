@@ -1,6 +1,6 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.utils.MixinInterfaces;
+import com.goo.goo_lib.util.MixinInterfaces;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;

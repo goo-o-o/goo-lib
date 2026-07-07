@@ -1,7 +1,7 @@
 package com.goo.goo_lib.mixin;
 
 import com.goo.goo_lib.client.text.StyleEffectContainer;
-import com.goo.goo_lib.client.text.StyleEffectUtils;
+import com.goo.goo_lib.util.StyleEffectUtil;
 import com.goo.goo_lib.client.text.effect.base.ConfiguredEffect;
 import com.goo.goo_lib.client.text.effect.base.OverlayEffect;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -17,19 +17,18 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Mixin({Font.StringRenderOutput.class})
 public abstract class StringRenderOutputMixin {
     @Inject(method = "<init>", at = @At("TAIL"))
     private void captureBufferSource(Font this$0, MultiBufferSource bufferSource, float x, float y, int color, boolean dropShadow, Matrix4f pose, Font.DisplayMode mode, int packedLightCoords, CallbackInfo ci) {
-        StyleEffectUtils.CURRENT_BUFFER_SOURCE.set(bufferSource);
     }
 
     @Inject(method = "finish", at = @At("TAIL"))
     private void clearBufferSource(int backgroundColor, float x, CallbackInfoReturnable<Float> cir) {
-        StyleEffectUtils.CURRENT_BUFFER_SOURCE.remove();
-        StyleEffectUtils.resetCurrentStyle();
+        StyleEffectUtil.resetCurrentStyle();
     }
 
     @Redirect(
@@ -42,19 +41,24 @@ public abstract class StringRenderOutputMixin {
     private VertexConsumer onStartRender(MultiBufferSource bufferSource, RenderType renderType,
                                          int index, Style style, int codePoint) {
         if (style == null) return bufferSource.getBuffer(renderType);
-        StyleEffectUtils.CURRENT_STYLE.set(style);
+        StyleEffectUtil.CURRENT_STYLE.set(style);
 
         List<ConfiguredEffect<?>> activeEffects = ((StyleEffectContainer) style).gl$getEffects();
         if (activeEffects == null || activeEffects.isEmpty()) return bufferSource.getBuffer(renderType);
 
+        List<StyleEffectUtil.OverlayPass> passes = null;
         for (ConfiguredEffect<?> configuredEffect : activeEffects) {
             if (configuredEffect.getEffect() instanceof OverlayEffect overlay) {
                 RenderType overlayType = overlay.getOverlayRenderType(renderType);
-                StyleEffectUtils.CURRENT_BLOOM_TYPE.set(overlayType); // stash for render()
-                break;
+                float alpha = configuredEffect.getOverlayAlpha();
+                if (passes == null) passes = new ArrayList<>();
+                passes.add(new StyleEffectUtil.OverlayPass(overlayType, alpha));
             }
         }
+        if (passes != null) {
+            StyleEffectUtil.OVERLAY_PASSES.set(passes);
+        }
 
-        return bufferSource.getBuffer(renderType); // always return normal buffer here
+        return bufferSource.getBuffer(renderType);
     }
 }

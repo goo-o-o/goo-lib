@@ -1,4 +1,4 @@
-package com.goo.goo_lib.utils;
+package com.goo.goo_lib.util;
 
 public class MixinInterfaces {
     public interface MobEffectInstanceSourceAccessor {

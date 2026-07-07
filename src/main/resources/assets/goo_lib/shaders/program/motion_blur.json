@@ -1,0 +1,26 @@
+{
+  "blend": {
+    "func": "add",
+    "srcrgb": "one",
+    "dstrgb": "zero",
+    "funcalpha": "add",
+    "srcalpha": "one",
+    "dstalpha": "zero"
+  },
+  "vertex": "goo_lib:motion_blur",
+  "fragment": "goo_lib:motion_blur",
+  "attributes": [
+    "Position"
+  ],
+  "samplers": [
+    { "name": "DiffuseSampler" },
+    { "name": "DepthSampler" }
+  ],
+  "uniforms": [
+    { "name": "ProjMat", "type": "matrix4x4", "count": 1, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+    { "name": "InSize", "type": "float", "count": 2, "values": [ 0.0, 0.0 ] },
+    { "name": "InvViewProjMat", "type": "matrix4x4", "count": 1, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+    { "name": "PrevViewProjMat", "type": "matrix4x4", "count": 1, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+    { "name": "BlurStrength", "type": "float", "count": 1, "values": [ 0.5 ] }
+  ]
+}

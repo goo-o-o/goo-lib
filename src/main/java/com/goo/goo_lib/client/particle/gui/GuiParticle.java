@@ -1,13 +1,14 @@
 package com.goo.goo_lib.client.particle.gui;
 
-import com.goo.goo_lib.utils.RenderUtils;
+import com.goo.goo_lib.util.RenderUtil;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.particle.SpriteSet;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.resources.ResourceLocation;
@@ -141,16 +142,16 @@ public class GuiParticle {
 
         if (useColor) {
             int colour = solidColor != -1 ? solidColor : FastColor.ARGB32.colorFromFloat(drawAlpha, drawR, drawG, drawB);
-            RenderUtils.fillFloat(graphics, left, top, right, bottom, z, colour);
+            RenderUtil.fillWithUv(RenderType.gui(), graphics, left, top, right, bottom, z, colour);
         } else if (particleType != null) {
             SpriteSet sprites = GuiParticleSystem.getSprites(particleType);
             if (sprites != null) {
                 TextureAtlasSprite sprite = sprites.get(age, lifetime);
-                RenderUtils.renderSpriteFloat(graphics, sprite, left, top, right, bottom, z, drawR, drawG, drawB, drawAlpha);
+                RenderUtil.blit(graphics, left, top, (float) z, pixelSize, pixelSize, sprite, drawR, drawG, drawB, drawAlpha);
             }
         } else if (texture != null) {
             RenderSystem.setShaderColor(drawR, drawG, drawB, drawAlpha);
-            RenderUtils.blitFloat(graphics, texture, left, top, right, bottom, z);
+            RenderUtil.blitSprite(graphics, texture, left, top, (float) z, pixelSize, pixelSize);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         }
 

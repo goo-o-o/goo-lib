@@ -10,8 +10,6 @@ out vec4 fragColor;
 
 
 void main() {
-    vec4 defaultColor = texture(Sampler0, texCoord0);
-    vec4 color = defaultColor * vertexColor;
-
-    fragColor = color * ColorModulator;
+    vec4 tex = texture(Sampler0, texCoord0);
+    fragColor = vec4(tex.rgb * vertexColor.rgb * vertexColor.a, tex.a * vertexColor.a);
 }

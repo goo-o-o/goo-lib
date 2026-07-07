@@ -54,6 +54,10 @@ public class ConfiguredEffect<C extends EffectConfig> {
         this.effect.applyEffect(data, x, y, dim, this.config);
     }
 
+    public float getOverlayAlpha() {
+        return this.effect instanceof OverlayEffect overlay ? overlay.getOverlayAlpha(this.config) : 1.0f;
+    }
+
     public C getConfig() {
         return config;
     }

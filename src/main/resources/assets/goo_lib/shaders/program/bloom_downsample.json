@@ -4,7 +4,7 @@
     "srcrgb": "one",
     "dstrgb": "zero"
   },
-  "vertex": "goo_lib:blur",
+  "vertex": "goo_lib:bloom",
   "fragment": "goo_lib:bloom_downsample",
   "attributes": ["Position"],
   "samplers": [{ "name": "DiffuseSampler" }],

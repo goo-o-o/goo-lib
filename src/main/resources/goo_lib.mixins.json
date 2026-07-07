@@ -26,12 +26,12 @@
     "ProjectileWeaponItemMixin",
     "ServerGamePacketListenerImplMixin",
     "ServerPlayerMixin",
+    "StyleAccessorMixin",
     "StyleMixin",
     "StyleSerializerMixin",
     "ThrownExperienceBottleMixin",
     "VillagerMixin",
-    "WanderingTraderMixin",
-    "StyleAccessorMixin"
+    "WanderingTraderMixin"
   ],
   "client": [
     "BakedGlyphMixin",

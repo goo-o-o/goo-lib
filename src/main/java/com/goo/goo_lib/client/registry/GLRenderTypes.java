@@ -18,13 +18,19 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterShadersEvent;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static net.minecraft.client.renderer.RenderStateShard.*;
 
 @EventBusSubscriber(modid = GooLib.MOD_ID, value = Dist.CLIENT)
 public class GLRenderTypes {
+    private static final Map<RenderType, RenderType> BLOOM_CACHE = new HashMap<>();
 
+    public static void clearCaches() {
+        BLOOM_CACHE.clear();
+    }
     // ── Helper to Remove Text RenderType Duplication ─────────────────────
 
     private static RenderType createTextRenderType(String name, RenderType sourceType, Supplier<ShaderInstance> shaderSupplier) {
@@ -44,20 +50,21 @@ public class GLRenderTypes {
     // ── Custom Dynamic Library Text Shaders ───────────────────────────────
 
     public static RenderType getBloom(RenderType sourceType) {
-        return RenderType.create(
-                GooLib.MOD_ID + ":text_bloom",
-                DefaultVertexFormat.POSITION_TEX_COLOR,
-                VertexFormat.Mode.QUADS,
-                256,
-                false,
-                false,
-                RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getTextBloomShader))
-                        .setTextureState(((CompositeStateAccessor) (Object) ((CompositeRenderTypeAccessor) sourceType).getState()).getTextureState())
-                        .setTransparencyState(ADDITIVE_TRANSPARENCY)
-                        .setDepthTestState(NO_DEPTH_TEST) // needed for overlay elements
-                        .setOutputState(BLOOM_OUTPUT) // crucial: forces this text pass into your bloom target
-                        .createCompositeState(false) // false means no sorting overhead, great for 2D UI elements
+        return BLOOM_CACHE.computeIfAbsent(sourceType, s -> RenderType.create(
+                        GooLib.MOD_ID + ":text_bloom",
+                        DefaultVertexFormat.POSITION_TEX_COLOR,
+                        VertexFormat.Mode.QUADS,
+                        256,
+                        false,
+                        false,
+                        RenderType.CompositeState.builder()
+                                .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getTextBloomShader))
+                                .setTextureState(((CompositeStateAccessor) (Object) ((CompositeRenderTypeAccessor) sourceType).getState()).getTextureState())
+                                .setTransparencyState(ADDITIVE_TRANSPARENCY)
+                                .setDepthTestState(NO_DEPTH_TEST) // needed for overlay elements
+                                .setOutputState(BLOOM_OUTPUT) // crucial: forces this text pass into your bloom target
+                                .createCompositeState(false) // false means no sorting overhead, great for 2D UI elements
+                )
         );
     }
 
@@ -91,7 +98,10 @@ public class GLRenderTypes {
         );
     }
 
-    public static RenderType getGalaxyRenderType() { return getGalaxyRenderType(LEQUAL_DEPTH_TEST); }
+    public static RenderType getGalaxyRenderType() {
+        return getGalaxyRenderType(LEQUAL_DEPTH_TEST);
+    }
+
     public static RenderType getGalaxyRenderType(DepthTestStateShard depthTestStateShard) {
         return RenderType.create(
                 GooLib.MOD_ID + ":galaxy_" + depthTestStateShard,
@@ -106,7 +116,10 @@ public class GLRenderTypes {
         );
     }
 
-    public static RenderType getMoltenRenderType() { return getMoltenRenderType(LEQUAL_DEPTH_TEST); }
+    public static RenderType getMoltenRenderType() {
+        return getMoltenRenderType(LEQUAL_DEPTH_TEST);
+    }
+
     public static RenderType getMoltenRenderType(DepthTestStateShard depthTestStateShard) {
         return RenderType.create(
                 GooLib.MOD_ID + ":molten_" + depthTestStateShard,
@@ -121,7 +134,10 @@ public class GLRenderTypes {
         );
     }
 
-    public static RenderType getMoltenRenderType(ResourceLocation resourceLocation) { return getMoltenRenderType(resourceLocation, LEQUAL_DEPTH_TEST); }
+    public static RenderType getMoltenRenderType(ResourceLocation resourceLocation) {
+        return getMoltenRenderType(resourceLocation, LEQUAL_DEPTH_TEST);
+    }
+
     public static RenderType getMoltenRenderType(ResourceLocation resourceLocation, DepthTestStateShard depthTestStateShard) {
         return RenderType.create(
                 GooLib.MOD_ID + ":molten_textured_" + depthTestStateShard,
@@ -137,7 +153,10 @@ public class GLRenderTypes {
         );
     }
 
-    public static RenderType getFireRenderType() { return getFireRenderType(LEQUAL_DEPTH_TEST); }
+    public static RenderType getFireRenderType() {
+        return getFireRenderType(LEQUAL_DEPTH_TEST);
+    }
+
     public static RenderType getFireRenderType(DepthTestStateShard depthTestStateShard) {
         return RenderType.create(
                 GooLib.MOD_ID + ":fire_" + depthTestStateShard,
@@ -152,7 +171,10 @@ public class GLRenderTypes {
         );
     }
 
-    public static RenderType getFireRenderType(ResourceLocation resourceLocation) { return getFireRenderType(resourceLocation, LEQUAL_DEPTH_TEST); }
+    public static RenderType getFireRenderType(ResourceLocation resourceLocation) {
+        return getFireRenderType(resourceLocation, LEQUAL_DEPTH_TEST);
+    }
+
     public static RenderType getFireRenderType(ResourceLocation resourceLocation, DepthTestStateShard depthTestStateShard) {
         return RenderType.create(
                 GooLib.MOD_ID + ":fire_textured_" + depthTestStateShard,
@@ -168,7 +190,10 @@ public class GLRenderTypes {
         );
     }
 
-    public static RenderType getBlurRenderType(ResourceLocation locationIn) { return getBlurRenderType(locationIn, LEQUAL_DEPTH_TEST); }
+    public static RenderType getBlurRenderType(ResourceLocation locationIn) {
+        return getBlurRenderType(locationIn, LEQUAL_DEPTH_TEST);
+    }
+
     public static RenderType getBlurRenderType(ResourceLocation locationIn, DepthTestStateShard depthTestStateShard) {
         return RenderType.create(
                 GooLib.MOD_ID + ":blur_" + depthTestStateShard,
@@ -184,7 +209,11 @@ public class GLRenderTypes {
                         .createCompositeState(true)
         );
     }
-    public static RenderType getBloomRenderType(ResourceLocation locationIn) { return getBloomRenderType(locationIn, LEQUAL_DEPTH_TEST); }
+
+    public static RenderType getBloomRenderType(ResourceLocation locationIn) {
+        return getBloomRenderType(locationIn, LEQUAL_DEPTH_TEST);
+    }
+
     public static RenderType getBloomRenderType(ResourceLocation locationIn, DepthTestStateShard depthTestStateShard) {
         return RenderType.create(
                 GooLib.MOD_ID + ":bloom_" + depthTestStateShard,
@@ -204,6 +233,8 @@ public class GLRenderTypes {
     /**
      * Post Effects
      */
+    public static final ResourceLocation MOTION_BLUR_SHADER_LOCATION = GooLib.loc("shaders/post/motion_blur.json");
+
 
     public static final ResourceLocation BLUR_SHADER_LOCATION = GooLib.loc("shaders/post/blur.json");
     protected static final RenderStateShard.OutputStateShard BLUR_OUTPUT = new RenderStateShard.OutputStateShard("blur_target", () -> {
@@ -213,6 +244,8 @@ public class GLRenderTypes {
             target.bindWrite(false);
         }
     }, () -> Minecraft.getInstance().getMainRenderTarget().bindWrite(false));
+
+
     public static final ResourceLocation BLOOM_SHADER_LOCATION = GooLib.loc("shaders/post/bloom.json");
     protected static final RenderStateShard.OutputStateShard BLOOM_OUTPUT = new RenderStateShard.OutputStateShard("bloom_target", () -> {
         RenderTarget target = PostEffectRegistry.getTempTarget(BLOOM_SHADER_LOCATION, "input");
@@ -257,31 +290,76 @@ public class GLRenderTypes {
         private static ShaderInstance renderTypeMoltenShader;
         private static ShaderInstance renderTypeGalaxyShader;
 
-        public static ShaderInstance getTextBloomShader() { return renderTypeNeonShader; }
-        public static void setTextBloomShader(ShaderInstance instance) { renderTypeNeonShader = instance; }
+        public static ShaderInstance getTextBloomShader() {
+            return renderTypeNeonShader;
+        }
 
-        public static ShaderInstance getRenderTypeFlameShader() { return renderTypeFlameShader; }
-        public static void setRenderTypeFlameShader(ShaderInstance instance) { renderTypeFlameShader = instance; }
+        public static void setTextBloomShader(ShaderInstance instance) {
+            renderTypeNeonShader = instance;
+        }
 
-        public static ShaderInstance getRenderTypeAbyssalShader() { return renderTypeAbyssalShader; }
-        public static void setRenderTypeAbyssalShader(ShaderInstance instance) { renderTypeAbyssalShader = instance; }
+        public static ShaderInstance getRenderTypeFlameShader() {
+            return renderTypeFlameShader;
+        }
 
-        public static ShaderInstance getRenderTypeBlurShader() { return renderTypeBlurShader; }
-        public static void setRenderTypeBlurShader(ShaderInstance instance) { renderTypeBlurShader = instance; }
+        public static void setRenderTypeFlameShader(ShaderInstance instance) {
+            renderTypeFlameShader = instance;
+        }
 
-        public static ShaderInstance getRenderTypeFireTextureShader() { return renderTypeFireTextureShader; }
-        public static void setRenderTypeFireTextureShader(ShaderInstance instance) { renderTypeFireTextureShader = instance; }
+        public static ShaderInstance getRenderTypeAbyssalShader() {
+            return renderTypeAbyssalShader;
+        }
 
-        public static ShaderInstance getRenderTypeFireShader() { return renderTypeFireShader; }
-        public static void setRenderTypeFireShader(ShaderInstance instance) { renderTypeFireShader = instance; }
+        public static void setRenderTypeAbyssalShader(ShaderInstance instance) {
+            renderTypeAbyssalShader = instance;
+        }
 
-        public static ShaderInstance getRenderTypeMoltenTextureShader() { return renderTypeMoltenTextureShader; }
-        public static void setRenderTypeMoltenTextureShader(ShaderInstance instance) { renderTypeMoltenTextureShader = instance; }
+        public static ShaderInstance getRenderTypeBlurShader() {
+            return renderTypeBlurShader;
+        }
 
-        public static ShaderInstance getRenderTypeMoltenShader() { return renderTypeMoltenShader; }
-        public static void setRenderTypeMoltenShader(ShaderInstance instance) { renderTypeMoltenShader = instance; }
+        public static void setRenderTypeBlurShader(ShaderInstance instance) {
+            renderTypeBlurShader = instance;
+        }
 
-        public static ShaderInstance getRenderTypeGalaxyShader() { return renderTypeGalaxyShader; }
-        public static void setRenderTypeGalaxyShader(ShaderInstance instance) { renderTypeGalaxyShader = instance; }
+        public static ShaderInstance getRenderTypeFireTextureShader() {
+            return renderTypeFireTextureShader;
+        }
+
+        public static void setRenderTypeFireTextureShader(ShaderInstance instance) {
+            renderTypeFireTextureShader = instance;
+        }
+
+        public static ShaderInstance getRenderTypeFireShader() {
+            return renderTypeFireShader;
+        }
+
+        public static void setRenderTypeFireShader(ShaderInstance instance) {
+            renderTypeFireShader = instance;
+        }
+
+        public static ShaderInstance getRenderTypeMoltenTextureShader() {
+            return renderTypeMoltenTextureShader;
+        }
+
+        public static void setRenderTypeMoltenTextureShader(ShaderInstance instance) {
+            renderTypeMoltenTextureShader = instance;
+        }
+
+        public static ShaderInstance getRenderTypeMoltenShader() {
+            return renderTypeMoltenShader;
+        }
+
+        public static void setRenderTypeMoltenShader(ShaderInstance instance) {
+            renderTypeMoltenShader = instance;
+        }
+
+        public static ShaderInstance getRenderTypeGalaxyShader() {
+            return renderTypeGalaxyShader;
+        }
+
+        public static void setRenderTypeGalaxyShader(ShaderInstance instance) {
+            renderTypeGalaxyShader = instance;
+        }
     }
 }

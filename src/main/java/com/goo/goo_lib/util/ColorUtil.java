@@ -1,10 +1,10 @@
-package com.goo.goo_lib.utils;
+package com.goo.goo_lib.util;
 
 import net.minecraft.util.FastColor;
 
 import java.util.List;
 
-public class ColorUtils {
+public class ColorUtil {
     public static int getGradientAt(float x, float spread, float speed, List<Integer> colors) {
         // Use the game's actual clock for smooth animation that respects pause menus
         // Divide by 1000 to convert millis to seconds

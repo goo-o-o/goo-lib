@@ -1,6 +1,15 @@
 package com.goo.goo_lib.client;
 
-//@EventBusSubscriber(modid = GooLib.MOD_ID, value = Dist.CLIENT)
+import com.goo.goo_lib.common.GooLib;
+import com.goo.goo_lib.util.Easing;
+import com.goo.goo_lib.util.screenshake.ScreenShakeUtil;
+import com.goo.goo_lib.util.screenshake.ShakeInstance;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientChatEvent;
+
+@EventBusSubscriber(modid = GooLib.MOD_ID, value = Dist.CLIENT)
 public class Test {
     //    @SubscribeEvent
 //    public static void onTooltip(ItemTooltipEvent event) {
@@ -25,18 +34,22 @@ public class Test {
 //        }
 //    }
 //
-//    @SubscribeEvent
-//    public static void onClientChat(ClientChatEvent event) {
-//        if (event.getMessage().equals("Spawned")) {
-//            GuiParticle particle = new GuiParticle(ParticleTypes.BUBBLE, 200, 200, 400, 0.5F, 0.0F, 100, 1F, 1F, 1F, 1F, 1F) {
-//                @Override
-//                public boolean tick() {
-//                    this.scale += 0.1F;
-//                    return super.tick();
-//                }
-//            };
-//
-//            GuiParticleSystem.getInstance().add(particle);
-//        }
-//    }
+    @SubscribeEvent
+    public static void onClientChat(ClientChatEvent event) {
+        if (event.getMessage().equals("Explosion")) {
+            ScreenShakeUtil.addShake(new ShakeInstance.Builder()
+                    .duration(100) // 1.5 seconds
+                    .easeIn(Easing.EASE_IN_EXPO, 15)
+                    .easeOut(Easing.EASE_OUT_EXPO, 15)
+                    .bounds(100F, 100F)
+                    .speed(100)
+                    .build());
+        } else if (event.getMessage().equals("Rumble")) {
+            ScreenShakeUtil.addShake(new ShakeInstance.Builder()
+                    .duration(90) // 3 seconds
+                    .bounds(3.0F, 3.0F)
+                    .speed(2.0F)
+                    .build());
+        }
+    }
 }
