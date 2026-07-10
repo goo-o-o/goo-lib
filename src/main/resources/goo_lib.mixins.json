@@ -40,6 +40,7 @@
     "CompositeStateAccessor",
     "FontMixin",
     "ItemInHandRendererMixin",
+    "ItemRendererMixin",
     "LevelRendererMixin",
     "LocalPlayerMixin",
     "PlayerRendererMixin",

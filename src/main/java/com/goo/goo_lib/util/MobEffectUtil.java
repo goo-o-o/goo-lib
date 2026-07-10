@@ -19,7 +19,7 @@ public class MobEffectUtil {
     /**
      * @param livingEntity The {@link LivingEntity} to add effects to
      * @param mobEffect    The {@link MobEffect} to add
-     * @param durationMod  A small {@link ModValue} record to pass the duration modifier as well as whether it should overwrite the original instance, the duration will be incremented if overwrite = false
+     * @param durationMod  A small {@link ModValue} record to pass the durationTicks modifier as well as whether it should overwrite the original instance, the durationTicks will be incremented if overwrite = false
      * @param amplifierMod A small {@link ModValue} record to pass the amplifier modifier as well as whether it should overwrite the original instance, the amplifier will be incremented if overwrite = false
      * @param ifAbsent     The code to run on the {@link LivingEntity} if the effect is absent
      * @param limit        The maximum amplifier of the {@link MobEffect}, inclusive

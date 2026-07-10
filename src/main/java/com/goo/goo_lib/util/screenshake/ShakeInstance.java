@@ -7,26 +7,26 @@ import net.minecraft.world.phys.Vec3;
 
 public class ShakeInstance {
     private int ticksElapsed = 0;
-    private final float speed;
-    private final int durationTicks;
-    private final int fadeInTicks;
-    private final int fadeOutTicks;
-    private final Easing fadeInCurve;
-    private final Easing fadeOutCurve;
+    public final float speed;
+    public final int durationTicks;
+    public final int fadeInTicks;
+    public final int fadeOutTicks;
+    public final Easing fadeInCurve; // enum
+    public final Easing fadeOutCurve; // enum
     public final boolean motionBlur;
 
     // customizable bounding limits
-    private final float maxX;
-    private final float maxY;
-    private final float maxPitch;
-    private final float maxYaw;
-    private final float maxRoll;
+    public final float maxX;
+    public final float maxY;
+    public final float maxPitch;
+    public final float maxYaw;
+    public final float maxRoll;
 
     // positional properties
-    private final Vec3 sourcePos;
-    private final double radius;
+    public final Vec3 sourcePos;
+    public final double radius;
 
-    private final long startTime;
+    public final long startTime;
 
     public ShakeInstance(Builder builder) {
         this.durationTicks = builder.durationTicks;

@@ -1,23 +1,18 @@
 {
   "targets": [
-    "swap"
+    "final"
   ],
   "passes": [
     {
       "name": "goo_lib:motion_blur",
       "intarget": "minecraft:main",
-      "outtarget": "swap",
+      "outtarget": "final",
       "auxtargets": [
         {
-          "name": "DiffuseDepthSampler",
+          "name": "DepthSampler",
           "id": "minecraft:main:depth"
         }
       ]
-    },
-    {
-      "name": "blit",
-      "intarget": "swap",
-      "outtarget": "minecraft:main"
     }
   ]
 }

@@ -29,6 +29,6 @@ public class BloomEffect implements TextEffect<BloomConfig>, OverlayEffect {
 
     @Override
     public float getOverlayAlpha(EffectConfig config) {
-        return config instanceof BloomConfig bc ? bc.intensity() : 0.8f;
+        return config instanceof BloomConfig(float intensity) ? intensity : 0.8f;
     }
 }

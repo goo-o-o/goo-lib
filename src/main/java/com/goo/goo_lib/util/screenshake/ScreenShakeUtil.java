@@ -1,12 +1,32 @@
 package com.goo.goo_lib.util.screenshake;
 
+import com.goo.goo_lib.common.network.ScreenShakePayload;
 import com.goo.goo_lib.util.MotionBlurUtil;
+import net.minecraft.client.Minecraft;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ScreenShakeUtil {
+    // per player on client
     private static final List<ShakeInstance> ACTIVE_SHAKES = new ArrayList<>();
+
+    public static void handleScreenShakePacket(final ScreenShakePayload packet, final IPayloadContext context) {
+        if (context.flow().isClientbound()) {
+            ShakeInstance instance = new ShakeInstance(new ShakeInstance.Builder()
+                    .speed(packet.speed())
+                    .duration(packet.durationTicks())
+                    .easeIn(packet.fadeInCurve(), packet.fadeInTicks())
+                    .easeOut(packet.fadeOutCurve(), packet.fadeOutTicks())
+                    .motionBlur(packet.motionBlur())
+                    .bounds(packet.maxX(), packet.maxY())
+                    .rotation(packet.maxPitch(), packet.maxYaw(), packet.maxRoll())
+                    .position(packet.sourcePos().orElse(null), packet.radius())
+            );
+            addShake(instance);
+        }
+    }
 
     /**
      * Safely register a completely custom configured screen shake layer.
@@ -23,6 +43,10 @@ public class ScreenShakeUtil {
         if (ACTIVE_SHAKES.isEmpty()) {
             MotionBlurUtil.setEnabled(false);
         }
+    }
+
+    public static boolean shouldScreenShake() {
+        return !Minecraft.getInstance().isPaused();
     }
 
     /**

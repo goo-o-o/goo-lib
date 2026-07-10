@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -32,6 +33,29 @@ public class GLRenderTypes {
         BLOOM_CACHE.clear();
     }
     // ── Helper to Remove Text RenderType Duplication ─────────────────────
+
+
+    public static RenderType getItemOutlineRenderType(float[] colors) {
+        return RenderType.create(GooLib.MOD_ID + ":item_outline",
+                DefaultVertexFormat.POSITION_TEX_COLOR,
+                VertexFormat.Mode.QUADS,
+                256,
+                false, false,
+                RenderType.CompositeState.builder()
+                        .setShaderState(new ShaderStateShard(() -> {
+                            ShaderInstance shader = InternalShaders.getRenderTypeItemOutlineShader();
+                            if (shader != null) {
+                                shader.safeGetUniform("OutlineColor").set(colors[0], colors[1], colors[2], colors[3]);
+                            }
+                            return shader;
+                        }))
+                        .setTextureState(new TextureStateShard(InventoryMenu.BLOCK_ATLAS, false, false))
+                        .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                        .setDepthTestState(LEQUAL_DEPTH_TEST)
+                        .setWriteMaskState(COLOR_WRITE)
+                        .createCompositeState(true)
+        );
+    }
 
     private static RenderType createTextRenderType(String name, RenderType sourceType, Supplier<ShaderInstance> shaderSupplier) {
         return RenderType.create(
@@ -61,15 +85,11 @@ public class GLRenderTypes {
                                 .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getTextBloomShader))
                                 .setTextureState(((CompositeStateAccessor) (Object) ((CompositeRenderTypeAccessor) sourceType).getState()).getTextureState())
                                 .setTransparencyState(ADDITIVE_TRANSPARENCY)
-                                .setDepthTestState(NO_DEPTH_TEST) // needed for overlay elements
-                                .setOutputState(BLOOM_OUTPUT) // crucial: forces this text pass into your bloom target
+                                .setDepthTestState(NO_DEPTH_TEST)
+                                .setOutputState(BLOOM_OUTPUT)
                                 .createCompositeState(false) // false means no sorting overhead, great for 2D UI elements
                 )
         );
-    }
-
-    public static RenderType getNeon(RenderType source) {
-        return createTextRenderType("neon", source, InternalShaders::getTextBloomShader);
     }
 
     public static RenderType getFlame(RenderType source) {
@@ -235,6 +255,15 @@ public class GLRenderTypes {
      */
     public static final ResourceLocation MOTION_BLUR_SHADER_LOCATION = GooLib.loc("shaders/post/motion_blur.json");
 
+    public static final ResourceLocation ITEM_OUTLINE_SHADER_LOCATION = GooLib.loc("shaders/post/item_outline.json");
+
+    protected static final RenderStateShard.OutputStateShard OUTLINE_OUTPUT = new RenderStateShard.OutputStateShard("item_outline_target", () -> {
+        RenderTarget target = PostEffectRegistry.getRenderTargetFor(ITEM_OUTLINE_SHADER_LOCATION);
+        if (target != null) {
+            target.copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
+            target.bindWrite(false);
+        }
+    }, () -> Minecraft.getInstance().getMainRenderTarget().bindWrite(false));
 
     public static final ResourceLocation BLUR_SHADER_LOCATION = GooLib.loc("shaders/post/blur.json");
     protected static final RenderStateShard.OutputStateShard BLUR_OUTPUT = new RenderStateShard.OutputStateShard("blur_target", () -> {
@@ -265,6 +294,7 @@ public class GLRenderTypes {
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_abyssal"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeAbyssalShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_blur"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeBlurShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_fire_texture"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeFireTextureShader);
+            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_item_outline"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeItemOutlineShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_fire"), DefaultVertexFormat.POSITION_COLOR), InternalShaders::setRenderTypeFireShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_molten_texture"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeMoltenTextureShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_molten"), DefaultVertexFormat.POSITION_COLOR), InternalShaders::setRenderTypeMoltenShader);
@@ -280,7 +310,7 @@ public class GLRenderTypes {
     // ── Encapsulated Internal Shader State Holder ─────────────────────────
 
     public static class InternalShaders {
-        private static ShaderInstance renderTypeNeonShader;
+        private static ShaderInstance renderTypeBloomShader;
         private static ShaderInstance renderTypeFlameShader;
         private static ShaderInstance renderTypeAbyssalShader;
         private static ShaderInstance renderTypeBlurShader;
@@ -289,13 +319,14 @@ public class GLRenderTypes {
         private static ShaderInstance renderTypeMoltenTextureShader;
         private static ShaderInstance renderTypeMoltenShader;
         private static ShaderInstance renderTypeGalaxyShader;
+        private static ShaderInstance renderTypeItemOutlineShader;
 
         public static ShaderInstance getTextBloomShader() {
-            return renderTypeNeonShader;
+            return renderTypeBloomShader;
         }
 
         public static void setTextBloomShader(ShaderInstance instance) {
-            renderTypeNeonShader = instance;
+            renderTypeBloomShader = instance;
         }
 
         public static ShaderInstance getRenderTypeFlameShader() {
@@ -360,6 +391,14 @@ public class GLRenderTypes {
 
         public static void setRenderTypeGalaxyShader(ShaderInstance instance) {
             renderTypeGalaxyShader = instance;
+        }
+
+        public static ShaderInstance getRenderTypeItemOutlineShader() {
+            return renderTypeItemOutlineShader;
+        }
+
+        public static void setRenderTypeItemOutlineShader(ShaderInstance instance) {
+            renderTypeItemOutlineShader = instance;
         }
     }
 }

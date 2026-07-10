@@ -5,6 +5,7 @@ import com.goo.goo_lib.client.particle.gui.GuiParticleSystem;
 import com.goo.goo_lib.client.registry.GLParticles;
 import com.goo.goo_lib.client.registry.GLRenderTypes;
 import com.goo.goo_lib.client.registry.PostEffectRegistry;
+import com.goo.goo_lib.client.render.OutlineColorRegistry;
 import com.goo.goo_lib.common.GooLib;
 import com.goo.goo_lib.util.screenshake.ScreenShakeUtil;
 import com.goo.goo_lib.util.screenshake.ShakeInstance;
@@ -25,23 +26,27 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onRenderLevelStage(RenderLevelStageEvent event) {
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_SKY) {
-            ShakeInstance.CalculatedOffsets offsets = ScreenShakeUtil.getCompositeOffsets(event.getPartialTick().getGameTimeDeltaTicks());
+            if (ScreenShakeUtil.shouldScreenShake()) {
+                ShakeInstance.CalculatedOffsets offsets = ScreenShakeUtil.getCompositeOffsets(event.getPartialTick().getGameTimeDeltaTicks());
 
-            if (offsets != ShakeInstance.CalculatedOffsets.ZERO) {
-                PoseStack poseStack = event.getPoseStack();
+                if (offsets != ShakeInstance.CalculatedOffsets.ZERO) {
+                    PoseStack poseStack = event.getPoseStack();
 
-                // apply positional jitter translation directly to the world rendering stack
-                poseStack.translate(offsets.x(), offsets.y(), 0.0F);
+                    // apply positional jitter translation directly to the world rendering stack
+                    poseStack.translate(offsets.x(), offsets.y(), 0.0F);
+                }
             }
         }
     }
 
     @SubscribeEvent
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
-        ShakeInstance.CalculatedOffsets offsets = ScreenShakeUtil.getCompositeOffsets((float) event.getPartialTick());
-        event.setPitch(event.getPitch() + offsets.pitch());
-        event.setYaw(event.getYaw() + offsets.yaw());
-        event.setRoll(event.getRoll() + offsets.roll());
+        if (ScreenShakeUtil.shouldScreenShake()) {
+            ShakeInstance.CalculatedOffsets offsets = ScreenShakeUtil.getCompositeOffsets((float) event.getPartialTick());
+            event.setPitch(event.getPitch() + offsets.pitch());
+            event.setYaw(event.getYaw() + offsets.yaw());
+            event.setRoll(event.getRoll() + offsets.roll());
+        }
     }
 
     @SubscribeEvent
@@ -55,12 +60,16 @@ public class ClientEvents {
             @Override
             protected void apply(@NotNull Void object, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
                 GLRenderTypes.clearCaches();
+                OutlineColorRegistry.clear();
             }
         });
     }
+
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
-        ScreenShakeUtil.clientTick();
+        if (ScreenShakeUtil.shouldScreenShake()) {
+            ScreenShakeUtil.clientTick();
+        }
         GuiParticleSystem.getInstance().tick();
     }
 

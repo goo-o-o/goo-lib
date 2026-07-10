@@ -2,6 +2,7 @@ package com.goo.goo_lib.mixin;
 
 
 import com.goo.goo_lib.common.registry.GLAttributes;
+import com.goo.goo_lib.util.ItemOutlineUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -9,9 +10,11 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -31,6 +34,26 @@ public class ItemInHandRendererMixin {
     private boolean smooth_shouldOverride = false;
     @Unique
     private float smooth_mockValue = 0.0F;
+
+    @Inject(
+            method = "renderItem",
+            at = @At("HEAD")
+    )
+    private void preRenderItem(
+            LivingEntity entity, ItemStack itemStack, ItemDisplayContext displayContext, boolean leftHand, PoseStack poseStack, MultiBufferSource buffer, int seed, CallbackInfo ci
+    ) {
+        ItemOutlineUtil.push(entity);
+    }
+
+    @Inject(
+            method = "renderItem",
+            at = @At("TAIL")
+    )
+    private void postRenderItem(
+            LivingEntity entity, ItemStack itemStack, ItemDisplayContext displayContext, boolean leftHand, PoseStack poseStack, MultiBufferSource buffer, int seed, CallbackInfo ci
+    ) {
+        ItemOutlineUtil.clear();
+    }
 
     @Inject(
             method = "renderArmWithItem",
