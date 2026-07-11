@@ -35,6 +35,7 @@
   ],
   "client": [
     "BakedGlyphMixin",
+    "ChannelMixin",
     "ClientPacketListenerMixin",
     "CompositeRenderTypeAccessor",
     "CompositeStateAccessor",
@@ -44,6 +45,7 @@
     "LevelRendererMixin",
     "LocalPlayerMixin",
     "PlayerRendererMixin",
+    "SoundEngineMixin",
     "StringRenderOutputMixin"
   ],
   "injectors": {
