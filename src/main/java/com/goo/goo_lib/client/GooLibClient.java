@@ -35,6 +35,9 @@ public class GooLibClient {
         PostEffectRegistry.registerPipeline(new EntityShaderPipeline() {
             @Override public ResourceLocation getLocation() { return GLRenderTypes.BLUR_SHADER_LOCATION; }
         });
+        PostEffectRegistry.registerPipeline(new EntityShaderPipeline() {
+            @Override public ResourceLocation getLocation() { return GLRenderTypes.BLOOM_SHADER_LOCATION; }
+        });
         PostEffectRegistry.registerPipeline(new MotionBlurPipeline());
     }
 }

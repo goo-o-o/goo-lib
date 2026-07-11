@@ -1,11 +1,11 @@
 {
   "blend": {
     "func": "add",
-    "srcrgb": "srcalpha",
-    "dstrgb": "1-srcalpha"
+    "srcrgb": "one",
+    "dstrgb": "zero"
   },
-  "vertex": "goo_lib:rendertype_blur",
-  "fragment": "goo_lib:rendertype_blur",
+  "vertex": "goo_lib:rendertype_bloom",
+  "fragment": "goo_lib:rendertype_bloom",
   "attributes": ["Position", "Color", "UV0"],
   "samplers": [{ "name": "Sampler0" }],
   "uniforms": [
@@ -32,7 +32,6 @@
       "type": "float",
       "count": 4,
       "values": [1.0, 1.0, 1.0, 1.0]
-    },
-    { "name": "GameTime", "type": "float", "count": 1, "values": [0.0] }
+    }
   ]
 }

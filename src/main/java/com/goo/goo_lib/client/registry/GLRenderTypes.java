@@ -82,7 +82,7 @@ public class GLRenderTypes {
                         false,
                         false,
                         RenderType.CompositeState.builder()
-                                .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getTextBloomShader))
+                                .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeTextBloomShader))
                                 .setTextureState(((CompositeStateAccessor) (Object) ((CompositeRenderTypeAccessor) sourceType).getState()).getTextureState())
                                 .setTransparencyState(ADDITIVE_TRANSPARENCY)
                                 .setDepthTestState(NO_DEPTH_TEST)
@@ -241,7 +241,7 @@ public class GLRenderTypes {
                 VertexFormat.Mode.QUADS,
                 256, false, true,
                 RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeBlurShader))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeBloomShader))
                         .setTextureState(new RenderStateShard.TextureStateShard(locationIn, false, false))
                         .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
                         .setDepthTestState(depthTestStateShard)
@@ -289,10 +289,11 @@ public class GLRenderTypes {
     @SubscribeEvent
     public static void registerShaders(RegisterShadersEvent event) {
         try {
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_bloom"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setTextBloomShader);
+            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_text_bloom"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeTextBloomShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_flame"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeFlameShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_abyssal"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeAbyssalShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_blur"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeBlurShader);
+            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_bloom"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeBloomShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_fire_texture"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeFireTextureShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_item_outline"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeItemOutlineShader);
             event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_fire"), DefaultVertexFormat.POSITION_COLOR), InternalShaders::setRenderTypeFireShader);
@@ -310,10 +311,11 @@ public class GLRenderTypes {
     // ── Encapsulated Internal Shader State Holder ─────────────────────────
 
     public static class InternalShaders {
-        private static ShaderInstance renderTypeBloomShader;
+        private static ShaderInstance renderTypeTextBloomShader;
         private static ShaderInstance renderTypeFlameShader;
         private static ShaderInstance renderTypeAbyssalShader;
         private static ShaderInstance renderTypeBlurShader;
+        private static ShaderInstance renderTypeBloomShader;
         private static ShaderInstance renderTypeFireTextureShader;
         private static ShaderInstance renderTypeFireShader;
         private static ShaderInstance renderTypeMoltenTextureShader;
@@ -321,84 +323,41 @@ public class GLRenderTypes {
         private static ShaderInstance renderTypeGalaxyShader;
         private static ShaderInstance renderTypeItemOutlineShader;
 
-        public static ShaderInstance getTextBloomShader() {
-            return renderTypeBloomShader;
+        public static ShaderInstance getRenderTypeTextBloomShader() {
+            return renderTypeTextBloomShader;
         }
+        public static void setRenderTypeTextBloomShader(ShaderInstance instance) { renderTypeTextBloomShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
+        public static ShaderInstance getRenderTypeFlameShader() { return renderTypeFlameShader; }
+        public static void setRenderTypeFlameShader(ShaderInstance instance) { renderTypeFlameShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
+        public static ShaderInstance getRenderTypeAbyssalShader() { return renderTypeAbyssalShader; }
+        public static void setRenderTypeAbyssalShader(ShaderInstance instance) { renderTypeAbyssalShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
+        public static ShaderInstance getRenderTypeBlurShader() { return renderTypeBlurShader; }
+        public static void setRenderTypeBlurShader(ShaderInstance instance) { renderTypeBlurShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
+        public static ShaderInstance getRenderTypeBloomShader() { return renderTypeBloomShader; }
+        public static void setRenderTypeBloomShader(ShaderInstance instance) { renderTypeBloomShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
+        public static ShaderInstance getRenderTypeFireTextureShader() { return renderTypeFireTextureShader; }
+        public static void setRenderTypeFireTextureShader(ShaderInstance instance) { renderTypeFireTextureShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
+        public static ShaderInstance getRenderTypeFireShader() { return renderTypeFireShader; }
+        public static void setRenderTypeFireShader(ShaderInstance instance) { renderTypeFireShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
+        public static ShaderInstance getRenderTypeMoltenTextureShader() { return renderTypeMoltenTextureShader; }
+        public static void setRenderTypeMoltenTextureShader(ShaderInstance instance) { renderTypeMoltenTextureShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
+        public static ShaderInstance getRenderTypeMoltenShader() { return renderTypeMoltenShader; }
+        public static void setRenderTypeMoltenShader(ShaderInstance instance) { renderTypeMoltenShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
+        public static ShaderInstance getRenderTypeGalaxyShader() { return renderTypeGalaxyShader; }
+        public static void setRenderTypeGalaxyShader(ShaderInstance instance) { renderTypeGalaxyShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
+        public static ShaderInstance getRenderTypeItemOutlineShader() { return renderTypeItemOutlineShader; }
+        public static void setRenderTypeItemOutlineShader(ShaderInstance instance) { renderTypeItemOutlineShader = instance; }
+        // ─────────────────────────────────────────────────────────────────────────────────────
 
-        public static void setTextBloomShader(ShaderInstance instance) {
-            renderTypeBloomShader = instance;
-        }
-
-        public static ShaderInstance getRenderTypeFlameShader() {
-            return renderTypeFlameShader;
-        }
-
-        public static void setRenderTypeFlameShader(ShaderInstance instance) {
-            renderTypeFlameShader = instance;
-        }
-
-        public static ShaderInstance getRenderTypeAbyssalShader() {
-            return renderTypeAbyssalShader;
-        }
-
-        public static void setRenderTypeAbyssalShader(ShaderInstance instance) {
-            renderTypeAbyssalShader = instance;
-        }
-
-        public static ShaderInstance getRenderTypeBlurShader() {
-            return renderTypeBlurShader;
-        }
-
-        public static void setRenderTypeBlurShader(ShaderInstance instance) {
-            renderTypeBlurShader = instance;
-        }
-
-        public static ShaderInstance getRenderTypeFireTextureShader() {
-            return renderTypeFireTextureShader;
-        }
-
-        public static void setRenderTypeFireTextureShader(ShaderInstance instance) {
-            renderTypeFireTextureShader = instance;
-        }
-
-        public static ShaderInstance getRenderTypeFireShader() {
-            return renderTypeFireShader;
-        }
-
-        public static void setRenderTypeFireShader(ShaderInstance instance) {
-            renderTypeFireShader = instance;
-        }
-
-        public static ShaderInstance getRenderTypeMoltenTextureShader() {
-            return renderTypeMoltenTextureShader;
-        }
-
-        public static void setRenderTypeMoltenTextureShader(ShaderInstance instance) {
-            renderTypeMoltenTextureShader = instance;
-        }
-
-        public static ShaderInstance getRenderTypeMoltenShader() {
-            return renderTypeMoltenShader;
-        }
-
-        public static void setRenderTypeMoltenShader(ShaderInstance instance) {
-            renderTypeMoltenShader = instance;
-        }
-
-        public static ShaderInstance getRenderTypeGalaxyShader() {
-            return renderTypeGalaxyShader;
-        }
-
-        public static void setRenderTypeGalaxyShader(ShaderInstance instance) {
-            renderTypeGalaxyShader = instance;
-        }
-
-        public static ShaderInstance getRenderTypeItemOutlineShader() {
-            return renderTypeItemOutlineShader;
-        }
-
-        public static void setRenderTypeItemOutlineShader(ShaderInstance instance) {
-            renderTypeItemOutlineShader = instance;
-        }
     }
 }
