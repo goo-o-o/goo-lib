@@ -4,8 +4,8 @@
     "srcrgb": "one",
     "dstrgb": "zero"
   },
-  "vertex": "goo_lib:rendertype_bloom",
-  "fragment": "goo_lib:rendertype_bloom",
+  "vertex": "goo_lib:rendertype_text_bloom",
+  "fragment": "goo_lib:rendertype_text_bloom",
   "attributes": ["Position", "Color", "UV0"],
   "samplers": [{ "name": "Sampler0" }],
   "uniforms": [

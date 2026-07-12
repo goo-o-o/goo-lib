@@ -2,6 +2,7 @@ package com.goo.goo_lib.client.text.effect;
 
 import com.goo.goo_lib.client.registry.GLRenderTypes;
 import com.goo.goo_lib.client.registry.PostEffectRegistry;
+import com.goo.goo_lib.client.render.pipeline.ShaderPipeline;
 import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.client.text.effect.base.OverlayEffect;
 import com.goo.goo_lib.client.text.effect.config.BloomConfig;
@@ -23,7 +24,7 @@ public class BloomEffect implements TextEffect<BloomConfig>, OverlayEffect {
 
     @Override
     public RenderType getOverlayRenderType(RenderType sourceType) {
-        PostEffectRegistry.renderEffectForNextTick(GLRenderTypes.BLOOM_SHADER_LOCATION);
+        PostEffectRegistry.renderEffectForNextTick(GLRenderTypes.BLOOM_SHADER_LOCATION, ShaderPipeline.PipelineStage.GUI);
         return GLRenderTypes.getBloom(sourceType);
     }
 

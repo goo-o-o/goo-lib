@@ -2,6 +2,8 @@ package com.goo.goo_lib.client.render.pipeline;
 
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.Locale;
+
 public abstract class ShaderPipeline {
 
     public abstract ResourceLocation getLocation();
@@ -13,7 +15,12 @@ public abstract class ShaderPipeline {
     }
 
     public enum PipelineStage {
-        GUI, ENTITY, SCREEN
+        GUI, ENTITY, SCREEN;
+
+        public String suffix() {
+            return "_" + this.name().toLowerCase(Locale.ROOT);
+        }
+
     }
 
     public enum BlitMode {

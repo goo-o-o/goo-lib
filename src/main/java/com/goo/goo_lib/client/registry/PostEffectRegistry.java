@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -52,15 +53,22 @@ public class PostEffectRegistry {
         pipelines.add(pipeline);
     }
 
-    public static void onInitializeOutline() {
+    public static void onInitializeOutline(ResourceManager resourceManager) {
         clear();
         Minecraft mc = Minecraft.getInstance();
         for (ShaderPipeline pipeline : pipelines) {
             ResourceLocation location = pipeline.getLocation();
+            ShaderPipeline.PipelineStage stage = ShaderPipeline.PipelineStage.SCREEN;
+            if (pipeline instanceof GuiShaderPipeline) stage = ShaderPipeline.PipelineStage.GUI;
+            else if (pipeline instanceof EntityShaderPipeline) stage = ShaderPipeline.PipelineStage.ENTITY;
+
+            ResourceLocation uniqueKey = location.withSuffix(stage.suffix());
+
             PostChain postChain = null;
             RenderTarget renderTarget = null;
             try {
-                postChain = new PostChain(mc.getTextureManager(), mc.getResourceManager(), mc.getMainRenderTarget(), location);
+                // pass original location since thats the file path, but store with unique key
+                postChain = new PostChain(mc.getTextureManager(), resourceManager, mc.getMainRenderTarget(), location);
                 postChain.resize(mc.getWindow().getWidth(), mc.getWindow().getHeight());
                 renderTarget = postChain.getTempTarget("final");
             } catch (IOException e) {
@@ -68,7 +76,7 @@ public class PostEffectRegistry {
             } catch (JsonSyntaxException e) {
                 GooLib.LOGGER.warn("Failed to parse shader: {}", location, e);
             }
-            postEffects.put(location, new PostEffect(postChain, renderTarget));
+            postEffects.put(uniqueKey, new PostEffect(postChain, renderTarget));
         }
     }
 
@@ -83,26 +91,26 @@ public class PostEffectRegistry {
 
     // ── Target Access ──────────────────────────────────────────────────────
 
-    public static RenderTarget getRenderTargetFor(ResourceLocation location) {
-        PostEffect effect = postEffects.get(location);
+    public static RenderTarget getRenderTargetFor(ResourceLocation location, ShaderPipeline.PipelineStage stage) {
+        PostEffect effect = postEffects.get(location.withSuffix(stage.suffix()));
         return effect == null ? null : effect.renderTarget;
     }
 
-    public static RenderTarget getTempTarget(ResourceLocation location, String name) {
-        PostEffect effect = postEffects.get(location);
+    public static RenderTarget getTempTarget(ResourceLocation location, ShaderPipeline.PipelineStage stage, String name) {
+        PostEffect effect = postEffects.get(location.withSuffix(stage.suffix()));
         if (effect == null || effect.postChain == null) return null;
         return effect.postChain.getTempTarget(name);
     }
 
     // ── Enable / Disable ───────────────────────────────────────────────────
 
-    public static void renderEffectForNextTick(ResourceLocation location) {
-        PostEffect effect = postEffects.get(location);
+    public static void renderEffectForNextTick(ResourceLocation location, ShaderPipeline.PipelineStage stage) {
+        PostEffect effect = postEffects.get(location.withSuffix(stage.suffix()));
         if (effect != null) effect.enabled = true;
     }
 
-    public static void setEnabled(ResourceLocation location, boolean enabled) {
-        PostEffect effect = postEffects.get(location);
+    public static void setEnabled(ResourceLocation location, ShaderPipeline.PipelineStage stage, boolean enabled) {
+        PostEffect effect = postEffects.get(location.withSuffix(stage.suffix()));
         if (effect != null) effect.enabled = enabled;
     }
 
@@ -116,11 +124,11 @@ public class PostEffectRegistry {
         for (ShaderPipeline pipeline : pipelines) {
             if (!(pipeline instanceof ScreenPostEffectPipeline sp)) continue;
             if (!sp.isEnabled() || !sp.isReadyThisFrame(mc)) continue;
-            PostChain chain = getPostChain(pipeline.getLocation());
+            PostChain chain = getPostChain(pipeline.getLocation(), pipeline.getStage());
             if (chain == null) continue;
             sp.onBeforeProcess(chain, event);
-            renderEffectForNextTick(pipeline.getLocation());
-            processAndBlitWith(pipeline.getLocation(), sp.getBlitMode());
+            renderEffectForNextTick(pipeline.getLocation(), sp.getStage());
+            processAndBlitWith(pipeline.getLocation(), ShaderPipeline.PipelineStage.SCREEN, sp.getBlitMode());
         }
     }
 
@@ -135,7 +143,7 @@ public class PostEffectRegistry {
             if (!(pipeline instanceof GuiShaderPipeline gui)) continue;
             String inputName = gui.getInputTargetName();
             if (inputName != null) {
-                clearTarget(pipeline.getLocation(), inputName);
+                clearTarget(pipeline.getLocation(), pipeline.getStage(), inputName);
             }
         }
     }
@@ -148,10 +156,10 @@ public class PostEffectRegistry {
             if (!(pipeline instanceof GuiShaderPipeline gui)) continue;
             if (!gui.isEnabled()) continue;
             gui.flushBuffers();
-            PostChain chain = getPostChain(pipeline.getLocation());
+            PostChain chain = getPostChain(pipeline.getLocation(), pipeline.getStage());
             if (chain != null) gui.onBeforeProcess(chain);
-            renderEffectForNextTick(pipeline.getLocation());
-            processAndBlitWith(pipeline.getLocation(), gui.getBlitMode());
+            renderEffectForNextTick(pipeline.getLocation(), pipeline.getStage());
+            processAndBlitWith(pipeline.getLocation(), pipeline.getStage(), gui.getBlitMode());
         }
     }
 
@@ -164,8 +172,9 @@ public class PostEffectRegistry {
     public static void clearAndBindWrite(RenderTarget mainTarget) {
         for (ShaderPipeline pipeline : pipelines) {
             if (!(pipeline instanceof EntityShaderPipeline entity)) continue;
-            PostEffect postEffect = postEffects.get(pipeline.getLocation());
-            if (postEffect == null || !postEffect.enabled || postEffect.postChain == null) continue;
+            PostEffect postEffect = postEffects.get(pipeline.getLocation().withSuffix(ShaderPipeline.PipelineStage.ENTITY.suffix())); // is always an entity pipeline stage
+            if (postEffect == null || postEffect.postChain == null) continue;
+//            if (postEffect == null || !postEffect.enabled || postEffect.postChain == null) continue;
             PostChain chain = postEffect.postChain;
             postEffect.renderTarget.clear(Minecraft.ON_OSX);
             mainTarget.bindWrite(false);
@@ -179,7 +188,7 @@ public class PostEffectRegistry {
     public static void processEffects(RenderTarget mainTarget) {
         for (ShaderPipeline pipeline : pipelines) {
             if (!(pipeline instanceof EntityShaderPipeline)) continue;
-            PostEffect postEffect = postEffects.get(pipeline.getLocation());
+            PostEffect postEffect = postEffects.get(pipeline.getLocation().withSuffix(ShaderPipeline.PipelineStage.ENTITY.suffix())); // is always an entity pipeline stage
             if (postEffect == null || !postEffect.enabled || postEffect.postChain == null) continue;
             postEffect.postChain.process(Minecraft.getInstance().getTimer().getGameTimeDeltaTicks());
             mainTarget.bindWrite(false);
@@ -197,7 +206,7 @@ public class PostEffectRegistry {
                 GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         for (ShaderPipeline pipeline : pipelines) {
             if (!(pipeline instanceof EntityShaderPipeline)) continue;
-            PostEffect postEffect = postEffects.get(pipeline.getLocation());
+            PostEffect postEffect = postEffects.get(pipeline.getLocation().withSuffix(ShaderPipeline.PipelineStage.ENTITY.suffix())); // is always an entity pipeline stage
             if (postEffect == null || postEffect.postChain == null || !postEffect.enabled) continue;
             Minecraft mc = Minecraft.getInstance();
             postEffect.renderTarget.blitToScreen(mc.getWindow().getWidth(), mc.getWindow().getHeight(), false);
@@ -215,8 +224,8 @@ public class PostEffectRegistry {
     /**
      * Clears a named intermediate target.
      */
-    public static void clearTarget(ResourceLocation location, String targetName) {
-        RenderTarget target = getTempTarget(location, targetName);
+    public static void clearTarget(ResourceLocation location, ShaderPipeline.PipelineStage stage, String targetName) {
+        RenderTarget target = getTempTarget(location, stage, targetName);
         if (target != null) {
             target.clear(Minecraft.ON_OSX);
             Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
@@ -226,12 +235,12 @@ public class PostEffectRegistry {
     /**
      * Processes a single effect and blits its "final" target additively.
      */
-    public static void processAndBlit(ResourceLocation location) {
-        processAndBlitWith(location, ShaderPipeline.BlitMode.ADDITIVE);
+    public static void processAndBlit(ResourceLocation location, ShaderPipeline.PipelineStage stage) {
+        processAndBlitWith(location, stage, ShaderPipeline.BlitMode.ADDITIVE);
     }
 
-    public static void blitEffectOpaque(ResourceLocation location) {
-        PostEffect effect = postEffects.get(location);
+    public static void blitEffectOpaque(ResourceLocation location, ShaderPipeline.PipelineStage stage) {
+        PostEffect effect = postEffects.get(location.withSuffix(stage.suffix()));
         if (effect == null || effect.postChain == null || !effect.enabled) return;
         RenderSystem.disableBlend();
         RenderSystem.disableDepthTest();
@@ -246,7 +255,7 @@ public class PostEffectRegistry {
      * Convenience wrapper for manual GUI elements (images, sprites, etc).
      */
     public static void renderGuiWithEffect(ResourceLocation location, GuiGraphics guiGraphics, Runnable renderContent) {
-        PostEffect effect = postEffects.get(location);
+        PostEffect effect = postEffects.get(location.withSuffix(ShaderPipeline.PipelineStage.GUI.suffix()));
         if (effect == null || effect.postChain == null) {
             renderContent.run();
             return;
@@ -267,13 +276,13 @@ public class PostEffectRegistry {
         guiGraphics.flush();
 
         effect.enabled = true;
-        processAndBlit(location);
+        processAndBlit(location, ShaderPipeline.PipelineStage.GUI);
     }
 
     // ── Internal ───────────────────────────────────────────────────────────
 
-    private static void processAndBlitWith(ResourceLocation location, ShaderPipeline.BlitMode mode) {
-        PostEffect effect = postEffects.get(location);
+    private static void processAndBlitWith(ResourceLocation location, ShaderPipeline.PipelineStage stage, ShaderPipeline.BlitMode mode) {
+        PostEffect effect = postEffects.get(location.withSuffix(stage.suffix()));
         if (effect == null || !effect.enabled || effect.postChain == null) return;
         Minecraft mc = Minecraft.getInstance();
         effect.postChain.process(mc.getTimer().getGameTimeDeltaTicks());
@@ -301,10 +310,12 @@ public class PostEffectRegistry {
         }
     }
 
-    /** Returns the raw PostChain for uniform manipulation. */
+    /**
+     * Returns the raw PostChain for uniform manipulation.
+     */
     @Nullable
-    public static PostChain getPostChain(ResourceLocation location) {
-        PostEffect effect = postEffects.get(location);
+    public static PostChain getPostChain(ResourceLocation location, ShaderPipeline.PipelineStage stage) {
+        PostEffect effect = postEffects.get(location.withSuffix(stage.suffix()));
         return effect == null ? null : effect.postChain;
     }
 

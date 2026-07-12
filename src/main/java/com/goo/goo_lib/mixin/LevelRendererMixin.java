@@ -30,7 +30,7 @@ public class LevelRendererMixin {
     @Inject(method = "initOutline",
             at = @At("TAIL"))
     private void onInitOutline(CallbackInfo ci) {
-        PostEffectRegistry.onInitializeOutline();
+        PostEffectRegistry.onInitializeOutline(this.minecraft.getResourceManager());
     }
 
     @Inject(method = "resize",

@@ -61,6 +61,8 @@ public class ClientEvents {
             protected void apply(@NotNull Void object, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
                 GLRenderTypes.clearCaches();
                 OutlineColorRegistry.clear();
+                PostEffectRegistry.onInitializeOutline(resourceManager);
+
             }
         });
     }

@@ -7,6 +7,9 @@ import com.goo.goo_lib.client.render.pipeline.EntityShaderPipeline;
 import com.goo.goo_lib.client.render.pipeline.GuiShaderPipeline;
 import com.goo.goo_lib.common.GooLib;
 import com.goo.goo_lib.util.StyleEffectUtil;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.PostChain;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -29,14 +32,35 @@ public class GooLibClient {
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
         PostEffectRegistry.registerPipeline(new GuiShaderPipeline() {
-            @Override public ResourceLocation getLocation() { return GLRenderTypes.BLOOM_SHADER_LOCATION; }
-            @Override public void flushBuffers() { StyleEffectUtil.TEXT_EFFECT_BUFFER.endBatch(); }
+            @Override
+            public ResourceLocation getLocation() {
+                return GLRenderTypes.BLOOM_SHADER_LOCATION;
+            }
+
+            @Override
+            public void flushBuffers() {
+                StyleEffectUtil.TEXT_EFFECT_BUFFER.endBatch();
+            }
         });
         PostEffectRegistry.registerPipeline(new EntityShaderPipeline() {
-            @Override public ResourceLocation getLocation() { return GLRenderTypes.BLUR_SHADER_LOCATION; }
+            @Override
+            public ResourceLocation getLocation() {
+                return GLRenderTypes.BLUR_SHADER_LOCATION;
+            }
         });
         PostEffectRegistry.registerPipeline(new EntityShaderPipeline() {
-            @Override public ResourceLocation getLocation() { return GLRenderTypes.BLOOM_SHADER_LOCATION; }
+            @Override
+            public ResourceLocation getLocation() {
+                return GLRenderTypes.BLOOM_SHADER_LOCATION;
+            }
+
+            @Override
+            public void onBeforeEntities(RenderTarget mainTarget, PostChain chain) {
+                RenderTarget input = chain.getTempTarget("input");
+                input.clear(Minecraft.ON_OSX);
+                mainTarget.bindWrite(false);
+            }
+
         });
         PostEffectRegistry.registerPipeline(new MotionBlurPipeline());
     }

@@ -1,5 +1,6 @@
 package com.goo.goo_lib.client.registry;
 
+import com.goo.goo_lib.client.render.pipeline.ShaderPipeline;
 import com.goo.goo_lib.common.GooLib;
 import com.goo.goo_lib.mixin.CompositeRenderTypeAccessor;
 import com.goo.goo_lib.mixin.CompositeStateAccessor;
@@ -255,19 +256,10 @@ public class GLRenderTypes {
      */
     public static final ResourceLocation MOTION_BLUR_SHADER_LOCATION = GooLib.loc("shaders/post/motion_blur.json");
 
-    public static final ResourceLocation ITEM_OUTLINE_SHADER_LOCATION = GooLib.loc("shaders/post/item_outline.json");
-
-    protected static final RenderStateShard.OutputStateShard OUTLINE_OUTPUT = new RenderStateShard.OutputStateShard("item_outline_target", () -> {
-        RenderTarget target = PostEffectRegistry.getRenderTargetFor(ITEM_OUTLINE_SHADER_LOCATION);
-        if (target != null) {
-            target.copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
-            target.bindWrite(false);
-        }
-    }, () -> Minecraft.getInstance().getMainRenderTarget().bindWrite(false));
 
     public static final ResourceLocation BLUR_SHADER_LOCATION = GooLib.loc("shaders/post/blur.json");
     protected static final RenderStateShard.OutputStateShard BLUR_OUTPUT = new RenderStateShard.OutputStateShard("blur_target", () -> {
-        RenderTarget target = PostEffectRegistry.getRenderTargetFor(BLUR_SHADER_LOCATION);
+        RenderTarget target = PostEffectRegistry.getRenderTargetFor(BLUR_SHADER_LOCATION, ShaderPipeline.PipelineStage.ENTITY);
         if (target != null) {
             target.copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
             target.bindWrite(false);
@@ -277,8 +269,9 @@ public class GLRenderTypes {
 
     public static final ResourceLocation BLOOM_SHADER_LOCATION = GooLib.loc("shaders/post/bloom.json");
     protected static final RenderStateShard.OutputStateShard BLOOM_OUTPUT = new RenderStateShard.OutputStateShard("bloom_target", () -> {
-        RenderTarget target = PostEffectRegistry.getTempTarget(BLOOM_SHADER_LOCATION, "input");
+        RenderTarget target = PostEffectRegistry.getTempTarget(BLOOM_SHADER_LOCATION, ShaderPipeline.PipelineStage.ENTITY, "input");
         if (target != null) {
+            // since we are getting a custom buffer named "input" and not the main minecraft render target, we need to clear it manually. done in onBeforeEntities now
             target.copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
             target.bindWrite(false);
         }
