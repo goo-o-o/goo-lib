@@ -27,8 +27,8 @@ public class MotionBlurPipeline extends ScreenPostEffectPipeline {
     }
 
     @Override
-    public boolean isEnabled() {
-        return MotionBlurUtil.isEnabled();
+    public boolean isDisabled() {
+        return !MotionBlurUtil.isEnabled();
     }
 
     @Override

@@ -6,6 +6,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 public class ShakeInstance {
+    public final String identifier;
     private int ticksElapsed = 0;
     public final float speed;
     public final int durationTicks;
@@ -29,6 +30,7 @@ public class ShakeInstance {
     public final long startTime;
 
     public ShakeInstance(Builder builder) {
+        this.identifier = builder.identifier;
         this.durationTicks = builder.durationTicks;
         this.fadeInTicks = builder.fadeInTicks;
         this.fadeOutTicks = builder.fadeOutTicks;
@@ -110,6 +112,7 @@ public class ShakeInstance {
 
     // ─── API BUILDER PATTERN ────────────────────────────────────────────────
     public static class Builder {
+        private String identifier = "main";
         private boolean motionBlur = true;
         private int durationTicks = 20;
         private Easing fadeInCurve = Easing.EASE_LINEAR;
@@ -124,7 +127,10 @@ public class ShakeInstance {
         private float maxRoll = 1.5F;
         private Vec3 sourcePos = null;
         private double radius = 0.0;
-
+        public Builder identifier(String identifier) {
+            this.identifier = identifier;
+            return this;
+        }
         public Builder duration(int ticks) {
             this.durationTicks = ticks;
             return this;

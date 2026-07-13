@@ -4,7 +4,7 @@
 # Note that there are a couple of TOML lists in this file.
 # Find more information on toml format here:  https://github.com/toml-lang/toml
 
-# The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
+# The name of the mod loader particleType to load - for regular FML @Mod mods it should be javafml
 modLoader="javafml" #mandatory
 
 # A version range to match for said mod loader - for regular FML @Mod it will be the FML version. This is currently 2.
@@ -64,7 +64,7 @@ config="${mod_id}.mixins.json"
 [[dependencies.${mod_id}]] #optional
     # the modid of the dependency
     modId="neoforge" #mandatory
-    # The type of the dependency. Can be one of "required", "optional", "incompatible" or "discouraged" (case insensitive).
+    # The particleType of the dependency. Can be one of "required", "optional", "incompatible" or "discouraged" (case insensitive).
     # 'required' requires the mod to exist, 'optional' does not
     # 'incompatible' will prevent the game from loading when the mod exists, and 'discouraged' will show a warning
     type="required" #mandatory

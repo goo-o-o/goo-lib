@@ -123,7 +123,7 @@ public class PostEffectRegistry {
         Minecraft mc = Minecraft.getInstance();
         for (ShaderPipeline pipeline : pipelines) {
             if (!(pipeline instanceof ScreenPostEffectPipeline sp)) continue;
-            if (!sp.isEnabled() || !sp.isReadyThisFrame(mc)) continue;
+            if (sp.isDisabled() || !sp.isReadyThisFrame(mc)) continue;
             PostChain chain = getPostChain(pipeline.getLocation(), pipeline.getStage());
             if (chain == null) continue;
             sp.onBeforeProcess(chain, event);
@@ -154,7 +154,7 @@ public class PostEffectRegistry {
     public static void dispatchPostGui() {
         for (ShaderPipeline pipeline : pipelines) {
             if (!(pipeline instanceof GuiShaderPipeline gui)) continue;
-            if (!gui.isEnabled()) continue;
+            if (gui.isDisabled()) continue;
             gui.flushBuffers();
             PostChain chain = getPostChain(pipeline.getLocation(), pipeline.getStage());
             if (chain != null) gui.onBeforeProcess(chain);

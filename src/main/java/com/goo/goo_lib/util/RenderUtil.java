@@ -6,13 +6,60 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.metadata.gui.GuiSpriteScaling;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 
 public class RenderUtil {
-    public static void writeQuad(VertexConsumer buffer, Matrix4f matrix, GlyphVertexData data, float alpha, float u0, float v0, float u1, float v1, int light) {
+
+    /**
+     * Renders a double sided quad
+     */
+    public static void drawDoubleSidedQuad(VertexConsumer consumer, Matrix4f matrix,
+                                         float width, float height,
+                                         float u0, float u1, float v0, float v1,
+                                         int packedLight, int r, int g, int b, int a) {
+        float halfWidth = width / 2;
+        // front
+        consumer.addVertex(matrix, -halfWidth, height, 0.0F).setColor(r, g, b, a).setUv(u0, v0)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
+        consumer.addVertex(matrix, -halfWidth, 0.0F, 0.0F).setColor(r, g, b, a).setUv(u0, v1)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
+        consumer.addVertex(matrix, halfWidth, 0.0F, 0.0F).setColor(r, g, b, a).setUv(u1, v1)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
+        consumer.addVertex(matrix, halfWidth, height, 0.0F).setColor(r, g, b, a).setUv(u1, v0)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
+
+        // back
+        consumer.addVertex(matrix, halfWidth, height, 0.0F).setColor(r, g, b, a).setUv(u1, v0)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, -1.0F);
+        consumer.addVertex(matrix, halfWidth, 0.0F, 0.0F).setColor(r, g, b, a).setUv(u1, v1)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, -1.0F);
+        consumer.addVertex(matrix, -halfWidth, 0.0F, 0.0F).setColor(r, g, b, a).setUv(u0, v1)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, -1.0F);
+        consumer.addVertex(matrix, -halfWidth, height, 0.0F).setColor(r, g, b, a).setUv(u0, v0)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, -1.0F);
+    }
+
+    public static void drawQuad(VertexConsumer consumer, Matrix4f matrix,
+                                           float width, float height,
+                                           float u0, float u1, float v0, float v1,
+                                           int packedLight, int r, int g, int b, int a) {
+        float halfWidth = width / 2;
+        // front
+        consumer.addVertex(matrix, -halfWidth, height, 0.0F).setColor(r, g, b, a).setUv(u0, v0)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
+        consumer.addVertex(matrix, -halfWidth, 0.0F, 0.0F).setColor(r, g, b, a).setUv(u0, v1)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
+        consumer.addVertex(matrix, halfWidth, 0.0F, 0.0F).setColor(r, g, b, a).setUv(u1, v1)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
+        consumer.addVertex(matrix, halfWidth, height, 0.0F).setColor(r, g, b, a).setUv(u1, v0)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
+    }
+
+    public static void drawGlyphQuad(VertexConsumer buffer, Matrix4f matrix, GlyphVertexData data, float alpha, float u0, float v0, float u1, float v1, int light) {
         buffer.addVertex(matrix, data.positions[0].x, data.positions[0].y, data.positions[0].z).setColor(data.reds[0], data.greens[0], data.blues[0], alpha).setUv(u0, v0).setLight(light);
         buffer.addVertex(matrix, data.positions[1].x, data.positions[1].y, data.positions[1].z).setColor(data.reds[1], data.greens[1], data.blues[1], alpha).setUv(u0, v1).setLight(light);
         buffer.addVertex(matrix, data.positions[2].x, data.positions[2].y, data.positions[2].z).setColor(data.reds[2], data.greens[2], data.blues[2], alpha).setUv(u1, v1).setLight(light);
@@ -287,11 +334,11 @@ public class RenderUtil {
      * {@link GuiGraphics#blitTiledSprite(TextureAtlasSprite, int, int, int, int, int, int, int, int, int, int, int)} with float support
      */
     public static void blitTiledSprite(GuiGraphics gui, TextureAtlasSprite sprite,
-                                        float x, float y, float blitOffset,
-                                        float width, float height,
-                                        float uPosition, float vPosition,
-                                        float spriteWidth, float spriteHeight,
-                                        float nineSliceWidth, float nineSliceHeight) {
+                                       float x, float y, float blitOffset,
+                                       float width, float height,
+                                       float uPosition, float vPosition,
+                                       float spriteWidth, float spriteHeight,
+                                       float nineSliceWidth, float nineSliceHeight) {
         if (width > 0 && height > 0) {
             if (spriteWidth > 0 && spriteHeight > 0) {
                 for (int i = 0; i < width; i += (int) spriteWidth) {

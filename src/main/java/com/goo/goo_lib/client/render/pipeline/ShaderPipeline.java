@@ -10,8 +10,8 @@ public abstract class ShaderPipeline {
 
     public abstract PipelineStage getStage();
 
-    public boolean isEnabled() {
-        return true;
+    public boolean isDisabled() {
+        return false;
     }
 
     public enum PipelineStage {

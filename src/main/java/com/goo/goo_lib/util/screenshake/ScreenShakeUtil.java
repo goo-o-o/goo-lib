@@ -15,6 +15,7 @@ public class ScreenShakeUtil {
     public static void handleScreenShakePacket(final ScreenShakePayload packet, final IPayloadContext context) {
         if (context.flow().isClientbound()) {
             ShakeInstance instance = new ShakeInstance(new ShakeInstance.Builder()
+                    .identifier(packet.identifier())
                     .speed(packet.speed())
                     .duration(packet.durationTicks())
                     .easeIn(packet.fadeInCurve(), packet.fadeInTicks())
@@ -35,6 +36,18 @@ public class ScreenShakeUtil {
         if (instance.motionBlur)
             MotionBlurUtil.setEnabled(true);
         ACTIVE_SHAKES.add(instance);
+    }
+
+    public static void clearShakes() {
+        ACTIVE_SHAKES.clear();
+        MotionBlurUtil.setEnabled(false);
+    }
+
+    /**
+     * Different {@link ShakeInstance}s can have the same identifier
+     */
+    public static void removeShake(String identifier) {
+        ACTIVE_SHAKES.removeIf(s -> s.identifier.equals(identifier));
     }
 
     public static void clientTick() {

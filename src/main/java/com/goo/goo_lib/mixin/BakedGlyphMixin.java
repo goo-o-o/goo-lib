@@ -84,7 +84,7 @@ public abstract class BakedGlyphMixin {
         for (ConfiguredEffect<?> configuredEffect : activeEffects) {
             configuredEffect.run(vertexData, pX, pY, dimFactor);
         }
-        RenderUtil.writeQuad(pBuffer, pMatrix, vertexData, pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
+        RenderUtil.drawGlyphQuad(pBuffer, pMatrix, vertexData, pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
 
         // ── Secondary overlay passes (bloom, fire, fog, …) ────────────────────
 
@@ -92,7 +92,7 @@ public abstract class BakedGlyphMixin {
         if (passes != null) {
             for (StyleEffectUtil.OverlayPass pass : passes) {
                 VertexConsumer overlayBuffer = StyleEffectUtil.TEXT_EFFECT_BUFFER.getBuffer(pass.renderType());
-                RenderUtil.writeQuad(overlayBuffer, pMatrix, vertexData, pass.alpha() * pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
+                RenderUtil.drawGlyphQuad(overlayBuffer, pMatrix, vertexData, pass.alpha() * pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
             }
             StyleEffectUtil.OVERLAY_PASSES.remove();
         }

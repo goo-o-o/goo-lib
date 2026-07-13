@@ -15,6 +15,7 @@ import org.joml.Vector3f;
 import java.util.Optional;
 
 public record ScreenShakePayload(
+        String identifier,
         float speed,
         int durationTicks,
         int fadeInTicks,
@@ -32,7 +33,9 @@ public record ScreenShakePayload(
 ) implements CustomPacketPayload {
 
     public ScreenShakePayload(ShakeInstance instance) {
-        this(instance.speed, instance.durationTicks,
+        this(
+                instance.identifier,
+                instance.speed, instance.durationTicks,
                 instance.fadeInTicks, instance.fadeOutTicks,
                 instance.fadeInCurve, instance.fadeOutCurve,
                 instance.motionBlur,
@@ -50,6 +53,7 @@ public record ScreenShakePayload(
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ScreenShakePayload> STREAM_CODEC = StreamCodec.of(
             (buf, payload) -> {
+                buf.writeUtf(payload.identifier);
                 buf.writeFloat(payload.speed);
                 buf.writeVarInt(payload.durationTicks);
                 buf.writeVarInt(payload.fadeInTicks);
@@ -66,6 +70,7 @@ public record ScreenShakePayload(
                 buf.writeDouble(payload.radius);
             },
             buf -> new ScreenShakePayload(
+                    buf.readUtf(),
                     buf.readFloat(),
                     buf.readVarInt(),
                     buf.readVarInt(),

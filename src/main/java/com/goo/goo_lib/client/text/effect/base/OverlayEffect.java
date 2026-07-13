@@ -4,7 +4,7 @@ import com.goo.goo_lib.client.text.effect.config.base.EffectConfig;
 import net.minecraft.client.renderer.RenderType;
 
 public interface OverlayEffect {
-    /** Returns the render type to use for the secondary overlay pass. */
+    /** Returns the render particleType to use for the secondary overlay pass. */
     RenderType getOverlayRenderType(RenderType sourceType);
 
     /**
@@ -15,7 +15,7 @@ public interface OverlayEffect {
         return 1.0f;
     }
 
-    /** Replaces the original render type instead of adding a pass. */
+    /** Replaces the original render particleType instead of adding a pass. */
     default RenderType modifyOriginalRenderType(RenderType sourceType) {
         return sourceType;
     }

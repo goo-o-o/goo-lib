@@ -26,7 +26,7 @@ public class ConfiguredEffect<C extends EffectConfig> {
         );
     }
 
-    // By mapping directly on type.codec() (which is a MapCodec), we remain in a MapCodec context the entire time!
+    // By mapping directly on particleType.codec() (which is a MapCodec), we remain in a MapCodec context the entire time!
     @SuppressWarnings("unchecked")
     private static <T extends EffectConfig> MapCodec<ConfiguredEffect<?>> extractMapCodec(EffectType<T> type) {
         return type.codec().xmap(
