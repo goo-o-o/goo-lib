@@ -119,6 +119,9 @@ public class GLRenderTypes {
     public static RenderType getSmoothWave(RenderType source) {
         return createTextRenderType("smooth_wave", source, InternalShaders.TEXT_SMOOTH_WAVE::getInstance);
     }
+    public static RenderType getAcid(RenderType source) {
+        return createTextRenderType("acid", source, InternalShaders.TEXT_ACID::getInstance);
+    }
 
 
     public static RenderType getFlame(RenderType source) {
@@ -338,6 +341,7 @@ public class GLRenderTypes {
         TEXT_FLAME(DefaultVertexFormat.POSITION_TEX_COLOR),
         TEXT_ABYSSAL(DefaultVertexFormat.POSITION_TEX_COLOR),
         TEXT_SMOOTH_WAVE(DefaultVertexFormat.POSITION_TEX_COLOR),
+        TEXT_ACID(DefaultVertexFormat.POSITION_TEX_COLOR),
         BLUR(DefaultVertexFormat.POSITION_TEX_COLOR),
         BLOOM(DefaultVertexFormat.POSITION_TEX_COLOR),
         FIRE_TEXTURE(DefaultVertexFormat.POSITION_TEX_COLOR),

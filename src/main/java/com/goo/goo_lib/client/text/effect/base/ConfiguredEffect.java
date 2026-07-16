@@ -5,10 +5,15 @@ import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.client.text.effect.TextEffect;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
+import net.minecraft.client.gui.Font;
 import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Style;
+import org.joml.Matrix4f;
+
+import java.util.List;
+
 
 public class ConfiguredEffect<C> {
-
 
 
     // Public entry point stays identical
@@ -33,7 +38,7 @@ public class ConfiguredEffect<C> {
                 (ConfiguredEffect<?> effect) -> (T) effect.getConfig() // lowercase c in config according to shared code
         );
     }
-    
+
 
     private final EffectType<C> type;
     private final TextEffect<C> effect;
@@ -49,8 +54,16 @@ public class ConfiguredEffect<C> {
         return this.type;
     }
 
-    public void run(GlyphVertexData data, float x, float y, float dim) {
-        this.effect.applyEffect(data, x, y, dim, this.config);
+    public void run(GlyphVertexData data, Matrix4f matrix, Style style, boolean dropShadow,int index, Font font, float x, float y, float dim, int codePoint) {
+        this.effect.applyEffect(data, matrix, style, dropShadow, index, font, x, y, dim, codePoint, this.config);
+    }
+
+    public Matrix4f applyMatrixTransforms(GlyphVertexData data, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, int codePoint) {
+        return this.effect.applyMatrixTransforms(data, matrix, style, dropShadow, index, font, pX, pY, codePoint, this.config);
+    }
+
+    public void collectExtraPasses(List<TextEffect.RenderPass> passes, GlyphVertexData vertexData, Matrix4f matrix, Style style, int index, Font font, float pX, float pY, int codePoint) {
+        this.effect.addExtraRenderPasses(passes, vertexData, matrix, style, index, font, pX, pY, codePoint, this.config);
     }
 
     public float getOverlayAlpha() {

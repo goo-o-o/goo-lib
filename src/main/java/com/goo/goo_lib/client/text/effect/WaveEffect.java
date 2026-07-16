@@ -5,7 +5,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Style;
 import org.joml.Math;
+import org.joml.Matrix4f;
 
 public class WaveEffect implements TextEffect<WaveEffect.Config> {
 
@@ -18,7 +21,7 @@ public class WaveEffect implements TextEffect<WaveEffect.Config> {
     }
 
     @Override
-    public void applyEffect(GlyphVertexData vertexData, float pX, float pY, float dimFactor, Config config) {
+    public void applyEffect(GlyphVertexData vertexData, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, float dimFactor, int codePoint, Config config) {
         float time = (Minecraft.getInstance().level != null ? Minecraft.getInstance().level.getGameTime() : 0)
                 + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
 

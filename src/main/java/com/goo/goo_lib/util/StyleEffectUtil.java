@@ -25,7 +25,6 @@ public class StyleEffectUtil {
      */
     public static final ThreadLocal<List<OverlayPass>> OVERLAY_PASSES = new ThreadLocal<>();
 
-    public static final ThreadLocal<Style> CURRENT_STYLE = ThreadLocal.withInitial(() -> Style.EMPTY);
 
     public record OverlayPass(RenderType renderType, float alpha) {
     }
@@ -41,10 +40,6 @@ public class StyleEffectUtil {
         return component.setStyle(fresh);
     }
 
-    public static void resetCurrentStyle() {
-        CURRENT_STYLE.remove();
-        OVERLAY_PASSES.remove();
-    }
 
     public static Style copyOf(Style base) {
         StyleAccessorMixin a = (StyleAccessorMixin) base;

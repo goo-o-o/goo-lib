@@ -1,5 +1,6 @@
 package com.goo.goo_lib.util;
 
+import net.minecraft.Util;
 import net.minecraft.util.FastColor;
 
 import java.util.List;
@@ -8,7 +9,7 @@ public class ColorUtil {
     public static int getGradientAt(float x, float spread, float speed, List<Integer> colors) {
         // Use the game's actual clock for smooth animation that respects pause menus
         // Divide by 1000 to convert millis to seconds
-        float time = (System.currentTimeMillis() % 100000L) / 1000.0F;
+        float time = (Util.getMillis() % 100000L) / 1000.0F;
 
         // Offset is (position / spread) + (time * speed)
         // We multiply speed by time so the wave moves

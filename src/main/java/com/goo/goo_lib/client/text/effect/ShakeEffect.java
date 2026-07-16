@@ -4,8 +4,11 @@ import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.client.Minecraft;
+import net.minecraft.Util;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
+import org.joml.Matrix4f;
 
 public class ShakeEffect implements TextEffect<ShakeEffect.Config> {
 
@@ -17,29 +20,13 @@ public class ShakeEffect implements TextEffect<ShakeEffect.Config> {
     }
 
 
-    // Mirrors the GLSL noise(x) = fract(sin(x) * 43758.5453)
-    private static float noise(float x) {
-        return (float) (Math.abs(Math.sin(x) * 43758.5453) % 1.0);
-    }
-
     @Override
-    public void applyEffect(GlyphVertexData vertexData, float pX, float pY, float dimFactor, ShakeEffect.Config config) {
-        float speed = config.speed() <= 0 ? 1F : config.speed();
-        float intensity = config.intensity() <= 0 ? 1F : config.intensity();
-
-        float time = (Minecraft.getInstance().level != null ? Minecraft.getInstance().level.getGameTime() : 0)
-                + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
-
-        float charId = Mth.floor(pX);
-        float scaledTime = time * speed;
-
-        float offsetX = (noise(charId * 10.0F + scaledTime) + 0.5F) * intensity;
-        float offsetY = (noise(charId * 10.0F - (scaledTime + 100)) - 0.5F) * intensity;
-
-        for (int i = 0; i < 4; i++) {
-            vertexData.positions[i].x += offsetX;
-            vertexData.positions[i].y += offsetY;
-        }
+    public void applyEffect(GlyphVertexData vertexData, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, float dimFactor, int codePoint, Config config) {
+        int seed = (int) (Util.getMillis() * 0.001f * config.speed() * 12f + codePoint + index);
+        float angle = (seed % 30) * (Mth.TWO_PI / 30f);
+        float dirX = Mth.cos(angle);
+        float dirY = Mth.sin(angle);
+        vertexData.shiftCornerPosiions(dirX * config.intensity(), dirY * config.intensity());
     }
 
     @Override

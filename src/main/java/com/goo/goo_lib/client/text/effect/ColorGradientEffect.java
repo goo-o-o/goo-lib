@@ -2,34 +2,23 @@ package com.goo.goo_lib.client.text.effect;
 
 import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.util.ColorUtil;
+import com.goo.goo_lib.util.GLCodecs;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FastColor;
+import org.joml.Matrix4f;
 
 import java.util.List;
 
 public class ColorGradientEffect implements TextEffect<ColorGradientEffect.Config> {
 
     public record Config(List<Integer> colors, float spread, float waveSpeed) {
-        public static final Codec<Integer> HEX_OR_INT_CODEC = Codec.STRING.flatXmap(
-                s -> {
-                    try {
-                        int value = s.startsWith("#")
-                                ? Integer.parseUnsignedInt(s.substring(1), 16)
-                                : s.startsWith("0x") || s.startsWith("0X")
-                                  ? Integer.parseUnsignedInt(s.substring(2), 16)
-                                  : Integer.parseInt(s);
-                        return DataResult.success(value);
-                    } catch (NumberFormatException e) {
-                        return DataResult.error(() -> "Invalid color: " + s);
-                    }
-                },
-                i -> DataResult.success(String.format("#%08X", i))
-        ).xmap(Integer::intValue, Integer::intValue);
 
         public static final MapCodec<Config> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
-                HEX_OR_INT_CODEC.listOf().fieldOf("colors").forGetter(Config::colors),
+                GLCodecs.UNIVERSAL_COLOR_CODEC.listOf().fieldOf("colors").forGetter(Config::colors),
                 Codec.FLOAT.fieldOf("spread").forGetter(Config::spread),
                 Codec.FLOAT.fieldOf("wave_speed").forGetter(Config::waveSpeed)
         ).apply(inst, Config::new));
@@ -37,7 +26,7 @@ public class ColorGradientEffect implements TextEffect<ColorGradientEffect.Confi
 
 
     @Override
-    public void applyEffect(GlyphVertexData vertexData, float pX, float pY, float dimFactor, Config config) {
+    public void applyEffect(GlyphVertexData vertexData, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, float dimFactor, int codePoint, Config config) {
         float leftWorldX = pX + vertexData.positions[0].x;
         float rightWorldX = pX + vertexData.positions[2].x;
 
@@ -45,10 +34,10 @@ public class ColorGradientEffect implements TextEffect<ColorGradientEffect.Confi
         int colorLeft = ColorUtil.getGradientAt(leftWorldX, config.spread(), config.waveSpeed(), config.colors());
         int colorRight = ColorUtil.getGradientAt(rightWorldX, config.spread(), config.waveSpeed(), config.colors());
 
-        applyRGB(vertexData, 0, colorLeft, dimFactor);
-        applyRGB(vertexData, 1, colorLeft, dimFactor);
-        applyRGB(vertexData, 2, colorRight, dimFactor);
-        applyRGB(vertexData, 3, colorRight, dimFactor);
+        applyRGBA(vertexData, 0, colorLeft, dimFactor);
+        applyRGBA(vertexData, 1, colorLeft, dimFactor);
+        applyRGBA(vertexData, 2, colorRight, dimFactor);
+        applyRGBA(vertexData, 3, colorRight, dimFactor);
     }
 
     @Override
@@ -56,10 +45,11 @@ public class ColorGradientEffect implements TextEffect<ColorGradientEffect.Confi
         return Config.CODEC;
     }
 
-    private void applyRGB(GlyphVertexData data, int index, int color, float dimFactor) {
-        float r = ((color >> 16) & 255) / 255.0F * dimFactor;
-        float g = ((color >> 8) & 255) / 255.0F * dimFactor;
-        float b = (color & 255) / 255.0F * dimFactor;
-        data.setCornerColor(index, r, g, b);
+    private void applyRGBA(GlyphVertexData data, int index, int color, float dimFactor) {
+        float r = FastColor.ARGB32.red(color) / 255F * dimFactor;
+        float g = FastColor.ARGB32.green(color) / 255F * dimFactor;
+        float b = FastColor.ARGB32.blue(color) / 255F * dimFactor;
+        float a = FastColor.ARGB32.alpha(color) / 255F * dimFactor;
+        data.setCornerColor(index, r, g, b, a);
     }
 }

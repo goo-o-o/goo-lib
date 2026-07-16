@@ -1,5 +1,6 @@
 package com.goo.goo_lib.mixin;
 
+import com.goo.goo_lib.client.render.GlyphVertexConsumer;
 import com.goo.goo_lib.client.text.StyleEffectContainer;
 import com.goo.goo_lib.client.text.effect.BloomEffect;
 import com.goo.goo_lib.client.text.effect.SmoothWaveEffect;
@@ -11,12 +12,12 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Style;
-import org.joml.Matrix4f;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
@@ -24,13 +25,23 @@ import java.util.List;
 
 @Mixin({Font.StringRenderOutput.class})
 public abstract class StringRenderOutputMixin {
-    @Inject(method = "<init>", at = @At("TAIL"))
-    private void captureBufferSource(Font this$0, MultiBufferSource bufferSource, float x, float y, int color, boolean dropShadow, Matrix4f pose, Font.DisplayMode mode, int packedLightCoords, CallbackInfo ci) {
-    }
+
+
+    @Shadow
+    @Final
+    private float dimFactor;
+
+    @Shadow
+    @Final
+    private boolean dropShadow;
+
+    @Shadow
+    @Final
+    private Font this$0;
 
     @Inject(method = "finish", at = @At("TAIL"))
     private void clearBufferSource(int backgroundColor, float x, CallbackInfoReturnable<Float> cir) {
-        StyleEffectUtil.resetCurrentStyle();
+        StyleEffectUtil.OVERLAY_PASSES.remove();
     }
 
     @Redirect(
@@ -46,7 +57,6 @@ public abstract class StringRenderOutputMixin {
 
         RenderType finalRenderType = renderType;
 
-        StyleEffectUtil.CURRENT_STYLE.set(style);
 
         List<ConfiguredEffect<?>> activeEffects = ((StyleEffectContainer) style).gl$getEffects();
         if (activeEffects == null || activeEffects.isEmpty()) return bufferSource.getBuffer(renderType);
@@ -86,6 +96,8 @@ public abstract class StringRenderOutputMixin {
             StyleEffectUtil.OVERLAY_PASSES.set(passes);
         }
 
-        return bufferSource.getBuffer(finalRenderType);
+
+        VertexConsumer targetedBuffer = bufferSource.getBuffer(finalRenderType);
+        return new GlyphVertexConsumer(targetedBuffer, style, index, this$0, this.dimFactor, this.dropShadow, codePoint);
     }
 }

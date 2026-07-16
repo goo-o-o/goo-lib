@@ -24,6 +24,15 @@ public class TextEffects {
     public static final Supplier<EffectType<ColorGradientEffect.Config>> COLOR_GRADIENT_TYPE = register("color_gradient", ColorGradientEffect::new);
     public static final Supplier<EffectType<WaveEffect.Config>> WAVE_TYPE = register("wave", WaveEffect::new);
     public static final Supplier<EffectType<SmoothWaveEffect.Config>> SMOOTH_WAVE_TYPE = register("smooth_wave", SmoothWaveEffect::new);
+    public static final Supplier<EffectType<AcidEffect.Config>> ACID_TYPE = register("acid", AcidEffect::new);
+    public static final Supplier<EffectType<CircleEffect.Config>> CIRCLE_TYPE = register("circle", CircleEffect::new);
+    public static final Supplier<EffectType<FadeEffect.Config>> FADE_TYPE = register("fade", FadeEffect::new);
+    public static final Supplier<EffectType<PendulumEffect.Config>> PENDULUM_TYPE = register("pendulum", PendulumEffect::new);
+    public static final Supplier<EffectType<TurbulenceEffect.Config>> TURBULENCE_TYPE = register("turbulence", TurbulenceEffect::new);
+    public static final Supplier<EffectType<WiggleEffect.Config>> WIGGLE_TYPE = register("wiggle", WiggleEffect::new);
+    public static final Supplier<EffectType<JitterEffect.Config>> JITTER_TYPE = register("jitter", JitterEffect::new);
+    public static final Supplier<EffectType<SwingEffect.Config>> SWING_TYPE = register("swing", SwingEffect::new);
+    public static final Supplier<EffectType<OutlineEffect.Config>> OUTLINE_TYPE = register("outline", OutlineEffect::new);
     public static final Supplier<EffectType<ShakeEffect.Config>> SHAKE_TYPE = register("shake", ShakeEffect::new);
     public static final Supplier<EffectType<Float>> BLOOM_TYPE = register("bloom", BloomEffect::new);
     public static final Supplier<EffectType<Unit>> FOGGY_TYPE = register("foggy", FoggyEffect::new);
