@@ -4,8 +4,8 @@
     "srcrgb": "one",
     "dstrgb": "zero"
   },
-  "vertex": "goo_lib:rendertype_text_bloom",
-  "fragment": "goo_lib:rendertype_text_bloom",
+  "vertex": "goo_lib:rendertype_text_smooth_wave",
+  "fragment": "rendertype_text",
   "attributes": ["Position", "Color", "UV0"],
   "samplers": [{ "name": "Sampler0" }],
   "uniforms": [
@@ -32,6 +32,10 @@
       "type": "float",
       "count": 4,
       "values": [1.0, 1.0, 1.0, 1.0]
-    }
+    },
+    { "name": "GameTime", "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "Speed", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "Amplitude", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "WaveFrequency", "type": "float", "count": 1, "values": [0.0] }
   ]
 }

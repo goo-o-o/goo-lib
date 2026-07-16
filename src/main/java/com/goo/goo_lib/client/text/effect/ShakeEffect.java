@@ -1,18 +1,29 @@
 package com.goo.goo_lib.client.text.effect;
 
 import com.goo.goo_lib.client.text.GlyphVertexData;
-import com.goo.goo_lib.client.text.effect.config.ShakeConfig;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 
-public class ShakeEffect implements TextEffect<ShakeConfig> {
+public class ShakeEffect implements TextEffect<ShakeEffect.Config> {
+
+    public record Config(float intensity, float speed) {
+        public static final MapCodec<ShakeEffect.Config> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
+                Codec.FLOAT.optionalFieldOf("intensity", 1.0F).forGetter(ShakeEffect.Config::intensity),
+                Codec.FLOAT.optionalFieldOf("speed", 1.0F).forGetter(ShakeEffect.Config::speed)
+        ).apply(inst, ShakeEffect.Config::new));
+    }
+
+
     // Mirrors the GLSL noise(x) = fract(sin(x) * 43758.5453)
     private static float noise(float x) {
         return (float) (Math.abs(Math.sin(x) * 43758.5453) % 1.0);
     }
 
     @Override
-    public void applyEffect(GlyphVertexData vertexData, float pX, float pY, float dimFactor, ShakeConfig config) {
+    public void applyEffect(GlyphVertexData vertexData, float pX, float pY, float dimFactor, ShakeEffect.Config config) {
         float speed = config.speed() <= 0 ? 1F : config.speed();
         float intensity = config.intensity() <= 0 ? 1F : config.intensity();
 
@@ -29,5 +40,10 @@ public class ShakeEffect implements TextEffect<ShakeConfig> {
             vertexData.positions[i].x += offsetX;
             vertexData.positions[i].y += offsetY;
         }
+    }
+
+    @Override
+    public MapCodec<Config> codec() {
+        return Config.CODEC;
     }
 }

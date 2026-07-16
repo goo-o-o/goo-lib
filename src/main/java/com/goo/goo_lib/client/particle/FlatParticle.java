@@ -5,32 +5,31 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
 import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 public class FlatParticle extends TextureSheetParticle {
     protected float oQuadSize;
     protected float pitch, oPitch;
     protected float yaw, oYaw;
+    protected boolean doubleSided = true;
 
-    public FlatParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, float size, float pitch, float yaw, float roll) {
+    public FlatParticle(ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, float radius, float pitch, float yaw, float roll) {
         super(level, x, y, z, xSpeed, ySpeed, zSpeed);
-        this.quadSize = size;
-        this.oQuadSize = size;
+        this.quadSize = radius;
+        this.oQuadSize = radius;
         this.pitch = pitch;
         this.oPitch = pitch;
         this.yaw = yaw;
         this.oYaw = yaw;
         this.roll = roll;
         this.oRoll = roll;
-        this.lifetime = 40;
+        this.lifetime = 200;
     }
 
-    public FlatParticle(ClientLevel level, double x, double y, double z, float size, float pitch, float yaw, float roll) {
-        this(level, x, y, z, 0, 0, 0, size, pitch, yaw, roll);
+    public FlatParticle(ClientLevel level, double x, double y, double z, float radius, float pitch, float yaw, float roll) {
+        this(level, x, y, z, 0, 0, 0, radius, pitch, yaw, roll);
     }
 
     @Override
@@ -42,62 +41,46 @@ public class FlatParticle extends TextureSheetParticle {
         super.tick();
     }
 
-    @Override
-    public void render(VertexConsumer buffer, Camera camera, float partialTicks) {
-        double rx = xo + (x - xo) * partialTicks;
-        double ry = yo + (y - yo) * partialTicks;
-        double rz = zo + (z - zo) * partialTicks;
-
-        Vec3 cameraPos = camera.getPosition();
-        float px = (float) (rx - cameraPos.x());
-        float py = (float) (ry - cameraPos.y());
-        float pz = (float) (rz - cameraPos.z());
-
-        float renderSize = Mth.lerp(partialTicks, this.oQuadSize, this.quadSize);
-        float halfSize = renderSize / 2.0F;
-
-        Vector3f[] vertices = new Vector3f[]{
-                new Vector3f(-halfSize, 0.0F, -halfSize),
-                new Vector3f(-halfSize, 0.0F, halfSize),
-                new Vector3f(halfSize, 0.0F, halfSize),
-                new Vector3f(halfSize, 0.0F, -halfSize)
-        };
-
-
-        Quaternionf rotation = new Quaternionf();
-
+    protected Quaternionf getRotations(float partialTicks) {
         float renderYaw = Mth.lerp(partialTicks, this.oYaw, this.yaw);
         float renderPitch = Mth.lerp(partialTicks, this.oPitch, this.pitch);
         float renderRoll = Mth.lerp(partialTicks, this.oRoll, this.roll);
 
-        rotation.rotationY(renderYaw * Mth.DEG_TO_RAD);
-        rotation.rotateX(renderPitch * Mth.DEG_TO_RAD);
-        rotation.rotateZ(renderRoll * Mth.DEG_TO_RAD);
+        Quaternionf rotation = new Quaternionf();
 
-        for (Vector3f vertex : vertices) {
-            rotation.transform(vertex);
-            vertex.add(px, py, pz);
+        rotation.rotationY(renderYaw * ((float)Math.PI / 180F));
+        rotation.rotateX(renderPitch * ((float)Math.PI / 180F));
+        rotation.rotateZ(renderRoll * ((float)Math.PI / 180F));
+
+        return rotation;
+    }
+
+    @Override
+    public void render(VertexConsumer buffer, Camera camera, float partialTicks) {
+        Quaternionf rotation = getRotations(partialTicks);
+
+        renderRotatedQuad(buffer, camera, rotation, partialTicks);
+    }
+
+    @Override
+    protected void renderRotatedQuad(VertexConsumer buffer, Quaternionf quaternion, float x, float y, float z, float partialTicks) {
+        float f = this.getQuadSize(partialTicks);
+        float f1 = this.getU0();
+        float f2 = this.getU1();
+        float f3 = this.getV0();
+        float f4 = this.getV1();
+        int i = this.getLightColor(partialTicks);
+        renderVertex(buffer, quaternion, x, y, z, 1.0F, -1.0F, f, f2, f4, i);
+        renderVertex(buffer, quaternion, x, y, z, 1.0F, 1.0F, f, f2, f3, i);
+        renderVertex(buffer, quaternion, x, y, z, -1.0F, 1.0F, f, f1, f3, i);
+        renderVertex(buffer, quaternion, x, y, z, -1.0F, -1.0F, f, f1, f4, i);
+
+        if (doubleSided) {
+            renderVertex(buffer, quaternion, x, y, z, -1.0F, -1.0F, f, f1, f4, i);
+            renderVertex(buffer, quaternion, x, y, z, -1.0F, 1.0F, f, f1, f3, i);
+            renderVertex(buffer, quaternion, x, y, z, 1.0F, 1.0F, f, f2, f3, i);
+            renderVertex(buffer, quaternion, x, y, z, 1.0F, -1.0F, f, f2, f4, i);
         }
-
-        float u0 = this.getU0();
-        float u1 = this.getU1();
-        float v0 = this.getV0();
-        float v1 = this.getV1();
-
-        int light = this.getLightColor(partialTicks);
-
-        // front
-        buffer.addVertex(vertices[0].x(), vertices[0].y(), vertices[0].z()).setUv(u1, v1).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setLight(light);
-        buffer.addVertex(vertices[1].x(), vertices[1].y(), vertices[1].z()).setUv(u1, v0).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setLight(light);
-        buffer.addVertex(vertices[2].x(), vertices[2].y(), vertices[2].z()).setUv(u0, v0).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setLight(light);
-        buffer.addVertex(vertices[3].x(), vertices[3].y(), vertices[3].z()).setUv(u0, v1).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setLight(light);
-
-        // back
-        buffer.addVertex(vertices[3].x(), vertices[3].y(), vertices[3].z()).setUv(u0, v1).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setLight(light);
-        buffer.addVertex(vertices[2].x(), vertices[2].y(), vertices[2].z()).setUv(u0, v0).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setLight(light);
-        buffer.addVertex(vertices[1].x(), vertices[1].y(), vertices[1].z()).setUv(u1, v0).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setLight(light);
-        buffer.addVertex(vertices[0].x(), vertices[0].y(), vertices[0].z()).setUv(u1, v1).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setLight(light);
-
     }
 
     @Override
@@ -116,7 +99,7 @@ public class FlatParticle extends TextureSheetParticle {
         @Nullable
         @Override
         public Particle createParticle(FlatParticleOption data, @NotNull ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
-            FlatParticle flatParticle = new FlatParticle(level, x, y, z, data.size(), data.rotX(), data.rotY(), data.rotZ());
+            FlatParticle flatParticle = new FlatParticle(level, x, y, z, data.radius(), data.rotX(), data.rotY(), data.rotZ());
             flatParticle.pickSprite(this.sprites);
             return flatParticle;
         }

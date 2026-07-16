@@ -5,22 +5,30 @@ import com.goo.goo_lib.common.GooLib;
 import com.goo.goo_lib.mixin.CompositeRenderTypeAccessor;
 import com.goo.goo_lib.mixin.CompositeStateAccessor;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterShadersEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -28,12 +36,30 @@ import static net.minecraft.client.renderer.RenderStateShard.*;
 
 @EventBusSubscriber(modid = GooLib.MOD_ID, value = Dist.CLIENT)
 public class GLRenderTypes {
-    private static final Map<RenderType, RenderType> BLOOM_CACHE = new HashMap<>();
+
+    public static final ParticleRenderType PARTICLE_SHEET_TRANSLUCENT_NO_FOG = new ParticleRenderType() {
+        @Override
+        public BufferBuilder begin(Tesselator tesselator, TextureManager textureManager) {
+            RenderSystem.enableDepthTest();
+            RenderSystem.depthMask(true);
+            RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_PARTICLES);
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShader(GameRenderer::getPositionColorTexLightmapShader); // if crashes in the future, add our own core shader
+            return tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP);
+        }
+
+        @Override
+        public String toString() {
+            return "PARTICLE_SHEET_TRANSLUCENT_NO_FOG";
+        }
+    };
+
+    private static final Map<RenderType, RenderType> TEXT_BLOOM_CACHE = new HashMap<>();
 
     public static void clearCaches() {
-        BLOOM_CACHE.clear();
+        TEXT_BLOOM_CACHE.clear();
     }
-    // ── Helper to Remove Text RenderType Duplication ─────────────────────
 
 
     public static RenderType getItemOutlineRenderType(float[] colors) {
@@ -44,7 +70,7 @@ public class GLRenderTypes {
                 false, false,
                 RenderType.CompositeState.builder()
                         .setShaderState(new ShaderStateShard(() -> {
-                            ShaderInstance shader = InternalShaders.getRenderTypeItemOutlineShader();
+                            ShaderInstance shader = InternalShaders.ITEM_OUTLINE.getInstance();
                             if (shader != null) {
                                 shader.safeGetUniform("OutlineColor").set(colors[0], colors[1], colors[2], colors[3]);
                             }
@@ -60,7 +86,7 @@ public class GLRenderTypes {
 
     private static RenderType createTextRenderType(String name, RenderType sourceType, Supplier<ShaderInstance> shaderSupplier) {
         return RenderType.create(
-                GooLib.MOD_ID + ":" + name,
+                GooLib.MOD_ID + ":text_" + name,
                 DefaultVertexFormat.POSITION_TEX_COLOR,
                 VertexFormat.Mode.QUADS,
                 256, false, true,
@@ -74,31 +100,33 @@ public class GLRenderTypes {
 
     // ── Custom Dynamic Library Text Shaders ───────────────────────────────
 
-    public static RenderType getBloom(RenderType sourceType) {
-        return BLOOM_CACHE.computeIfAbsent(sourceType, s -> RenderType.create(
-                        GooLib.MOD_ID + ":text_bloom",
-                        DefaultVertexFormat.POSITION_TEX_COLOR,
-                        VertexFormat.Mode.QUADS,
-                        256,
-                        false,
-                        false,
-                        RenderType.CompositeState.builder()
-                                .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeTextBloomShader))
-                                .setTextureState(((CompositeStateAccessor) (Object) ((CompositeRenderTypeAccessor) sourceType).getState()).getTextureState())
-                                .setTransparencyState(ADDITIVE_TRANSPARENCY)
-                                .setDepthTestState(NO_DEPTH_TEST)
-                                .setOutputState(BLOOM_OUTPUT)
-                                .createCompositeState(false) // false means no sorting overhead, great for 2D UI elements
-                )
-        );
+    public static RenderType getTextBloom(RenderType glyphRenderType) {
+        return TEXT_BLOOM_CACHE.computeIfAbsent(glyphRenderType, s -> RenderType.create(
+                GooLib.MOD_ID + ":text_bloom",
+                DefaultVertexFormat.POSITION_TEX_COLOR,
+                VertexFormat.Mode.QUADS,
+                256, false, false,
+                RenderType.CompositeState.builder()
+                        .setShaderState(new ShaderStateShard(InternalShaders.TEXT_BLOOM::getInstance))
+                        .setTextureState(((CompositeStateAccessor) (Object) ((CompositeRenderTypeAccessor) s).getState()).getTextureState())
+                        .setTransparencyState(ADDITIVE_TRANSPARENCY)
+                        .setDepthTestState(NO_DEPTH_TEST)
+                        .setOutputState(BLOOM_OUTPUT_GUI)
+                        .createCompositeState(false)
+        ));
     }
 
+    public static RenderType getSmoothWave(RenderType source) {
+        return createTextRenderType("smooth_wave", source, InternalShaders.TEXT_SMOOTH_WAVE::getInstance);
+    }
+
+
     public static RenderType getFlame(RenderType source) {
-        return createTextRenderType("flame", source, InternalShaders::getRenderTypeFlameShader);
+        return createTextRenderType("flame", source, InternalShaders.TEXT_FLAME::getInstance);
     }
 
     public static RenderType getAbyssal(RenderType source) {
-        return createTextRenderType("abyssal", source, InternalShaders::getRenderTypeAbyssalShader);
+        return createTextRenderType("abyssal", source, InternalShaders.TEXT_ABYSSAL::getInstance);
     }
 
     // ── Standard World / UI Custom Render Types ───────────────────────────
@@ -130,7 +158,7 @@ public class GLRenderTypes {
                 VertexFormat.Mode.QUADS,
                 1536, false, true,
                 RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeGalaxyShader))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders.GALAXY::getInstance))
                         .setTransparencyState(NO_TRANSPARENCY)
                         .setDepthTestState(depthTestStateShard)
                         .createCompositeState(true)
@@ -148,7 +176,7 @@ public class GLRenderTypes {
                 VertexFormat.Mode.QUADS,
                 1536, false, true,
                 RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeMoltenShader))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders.MOLTEN::getInstance))
                         .setTransparencyState(ADDITIVE_TRANSPARENCY)
                         .setDepthTestState(depthTestStateShard)
                         .createCompositeState(true)
@@ -166,7 +194,7 @@ public class GLRenderTypes {
                 VertexFormat.Mode.QUADS,
                 1536, false, true,
                 RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeMoltenTextureShader))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders.MOLTEN_TEXTURE::getInstance))
                         .setTextureState(new TextureStateShard(resourceLocation, false, true))
                         .setTransparencyState(ADDITIVE_TRANSPARENCY)
                         .setDepthTestState(depthTestStateShard)
@@ -185,7 +213,7 @@ public class GLRenderTypes {
                 VertexFormat.Mode.QUADS,
                 1536, false, true,
                 RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeFireShader))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders.FIRE::getInstance))
                         .setTransparencyState(ADDITIVE_TRANSPARENCY)
                         .setDepthTestState(depthTestStateShard)
                         .createCompositeState(true)
@@ -203,7 +231,7 @@ public class GLRenderTypes {
                 VertexFormat.Mode.QUADS,
                 1536, false, true,
                 RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeFireTextureShader))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders.FIRE_TEXTURE::getInstance))
                         .setTextureState(new TextureStateShard(resourceLocation, false, true))
                         .setTransparencyState(ADDITIVE_TRANSPARENCY)
                         .setDepthTestState(depthTestStateShard)
@@ -222,7 +250,7 @@ public class GLRenderTypes {
                 VertexFormat.Mode.QUADS,
                 256, false, true,
                 RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeBlurShader))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders.BLUR::getInstance))
                         .setTextureState(new RenderStateShard.TextureStateShard(locationIn, false, false))
                         .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
                         .setDepthTestState(depthTestStateShard)
@@ -242,11 +270,11 @@ public class GLRenderTypes {
                 VertexFormat.Mode.QUADS,
                 256, false, true,
                 RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders::getRenderTypeBloomShader))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders.BLOOM::getInstance))
                         .setTextureState(new RenderStateShard.TextureStateShard(locationIn, false, false))
                         .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
                         .setDepthTestState(depthTestStateShard)
-                        .setOutputState(BLOOM_OUTPUT)
+                        .setOutputState(BLOOM_OUTPUT_ENTITY)
                         .createCompositeState(true)
         );
     }
@@ -268,7 +296,16 @@ public class GLRenderTypes {
 
 
     public static final ResourceLocation BLOOM_SHADER_LOCATION = GooLib.loc("shaders/post/bloom.json");
-    protected static final RenderStateShard.OutputStateShard BLOOM_OUTPUT = new RenderStateShard.OutputStateShard("bloom_target", () -> {
+    protected static final RenderStateShard.OutputStateShard BLOOM_OUTPUT_GUI = new RenderStateShard.OutputStateShard("bloom_target", () -> {
+        RenderTarget target = PostEffectRegistry.getTempTarget(BLOOM_SHADER_LOCATION, ShaderPipeline.PipelineStage.GUI, "input");
+        if (target != null) {
+            // since we are getting a custom buffer named "input" and not the main minecraft render target, we need to clear it manually. done in onBeforeEntities now
+            target.copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
+            target.bindWrite(false);
+        }
+    }, () -> Minecraft.getInstance().getMainRenderTarget().bindWrite(false));
+
+    protected static final RenderStateShard.OutputStateShard BLOOM_OUTPUT_ENTITY = new RenderStateShard.OutputStateShard("bloom_target", () -> {
         RenderTarget target = PostEffectRegistry.getTempTarget(BLOOM_SHADER_LOCATION, ShaderPipeline.PipelineStage.ENTITY, "input");
         if (target != null) {
             // since we are getting a custom buffer named "input" and not the main minecraft render target, we need to clear it manually. done in onBeforeEntities now
@@ -282,75 +319,52 @@ public class GLRenderTypes {
     @SubscribeEvent
     public static void registerShaders(RegisterShadersEvent event) {
         try {
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_text_bloom"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeTextBloomShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_flame"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeFlameShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_abyssal"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeAbyssalShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_blur"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeBlurShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_bloom"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeBloomShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_fire_texture"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeFireTextureShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_item_outline"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeItemOutlineShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_fire"), DefaultVertexFormat.POSITION_COLOR), InternalShaders::setRenderTypeFireShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_molten_texture"), DefaultVertexFormat.POSITION_TEX_COLOR), InternalShaders::setRenderTypeMoltenTextureShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_molten"), DefaultVertexFormat.POSITION_COLOR), InternalShaders::setRenderTypeMoltenShader);
-            event.registerShader(new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_galaxy"), DefaultVertexFormat.POSITION_COLOR), InternalShaders::setRenderTypeGalaxyShader);
-
+            for (InternalShaders shader : InternalShaders.values()) {
+                event.registerShader(
+                        new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_" + shader.name().toLowerCase(Locale.ROOT)), shader.getFormat()),
+                        shader::setInstance
+                );
+            }
             GooLib.LOGGER.info("Successfully consolidated and loaded internal shaders.");
         } catch (IOException exception) {
-            GooLib.LOGGER.error("Failed to register unified pipeline shaders");
-            exception.printStackTrace();
+            GooLib.LOGGER.error("Failed to register unified pipeline shaders", exception);
         }
     }
 
     // ── Encapsulated Internal Shader State Holder ─────────────────────────
 
-    public static class InternalShaders {
-        private static ShaderInstance renderTypeTextBloomShader;
-        private static ShaderInstance renderTypeFlameShader;
-        private static ShaderInstance renderTypeAbyssalShader;
-        private static ShaderInstance renderTypeBlurShader;
-        private static ShaderInstance renderTypeBloomShader;
-        private static ShaderInstance renderTypeFireTextureShader;
-        private static ShaderInstance renderTypeFireShader;
-        private static ShaderInstance renderTypeMoltenTextureShader;
-        private static ShaderInstance renderTypeMoltenShader;
-        private static ShaderInstance renderTypeGalaxyShader;
-        private static ShaderInstance renderTypeItemOutlineShader;
+    public enum InternalShaders {
+        TEXT_BLOOM(DefaultVertexFormat.POSITION_TEX_COLOR),
+        TEXT_FLAME(DefaultVertexFormat.POSITION_TEX_COLOR),
+        TEXT_ABYSSAL(DefaultVertexFormat.POSITION_TEX_COLOR),
+        TEXT_SMOOTH_WAVE(DefaultVertexFormat.POSITION_TEX_COLOR),
+        BLUR(DefaultVertexFormat.POSITION_TEX_COLOR),
+        BLOOM(DefaultVertexFormat.POSITION_TEX_COLOR),
+        FIRE_TEXTURE(DefaultVertexFormat.POSITION_TEX_COLOR),
+        ITEM_OUTLINE(DefaultVertexFormat.POSITION_TEX_COLOR),
+        FIRE(DefaultVertexFormat.POSITION_COLOR),
+        MOLTEN_TEXTURE(DefaultVertexFormat.POSITION_TEX_COLOR),
+        MOLTEN(DefaultVertexFormat.POSITION_COLOR),
+        GALAXY(DefaultVertexFormat.POSITION_COLOR);
 
-        public static ShaderInstance getRenderTypeTextBloomShader() {
-            return renderTypeTextBloomShader;
+        private final VertexFormat format;
+        private ShaderInstance instance;
+
+        InternalShaders(VertexFormat format) {
+            this.format = format;
         }
-        public static void setRenderTypeTextBloomShader(ShaderInstance instance) { renderTypeTextBloomShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
-        public static ShaderInstance getRenderTypeFlameShader() { return renderTypeFlameShader; }
-        public static void setRenderTypeFlameShader(ShaderInstance instance) { renderTypeFlameShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
-        public static ShaderInstance getRenderTypeAbyssalShader() { return renderTypeAbyssalShader; }
-        public static void setRenderTypeAbyssalShader(ShaderInstance instance) { renderTypeAbyssalShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
-        public static ShaderInstance getRenderTypeBlurShader() { return renderTypeBlurShader; }
-        public static void setRenderTypeBlurShader(ShaderInstance instance) { renderTypeBlurShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
-        public static ShaderInstance getRenderTypeBloomShader() { return renderTypeBloomShader; }
-        public static void setRenderTypeBloomShader(ShaderInstance instance) { renderTypeBloomShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
-        public static ShaderInstance getRenderTypeFireTextureShader() { return renderTypeFireTextureShader; }
-        public static void setRenderTypeFireTextureShader(ShaderInstance instance) { renderTypeFireTextureShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
-        public static ShaderInstance getRenderTypeFireShader() { return renderTypeFireShader; }
-        public static void setRenderTypeFireShader(ShaderInstance instance) { renderTypeFireShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
-        public static ShaderInstance getRenderTypeMoltenTextureShader() { return renderTypeMoltenTextureShader; }
-        public static void setRenderTypeMoltenTextureShader(ShaderInstance instance) { renderTypeMoltenTextureShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
-        public static ShaderInstance getRenderTypeMoltenShader() { return renderTypeMoltenShader; }
-        public static void setRenderTypeMoltenShader(ShaderInstance instance) { renderTypeMoltenShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
-        public static ShaderInstance getRenderTypeGalaxyShader() { return renderTypeGalaxyShader; }
-        public static void setRenderTypeGalaxyShader(ShaderInstance instance) { renderTypeGalaxyShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
-        public static ShaderInstance getRenderTypeItemOutlineShader() { return renderTypeItemOutlineShader; }
-        public static void setRenderTypeItemOutlineShader(ShaderInstance instance) { renderTypeItemOutlineShader = instance; }
-        // ─────────────────────────────────────────────────────────────────────────────────────
 
+        public VertexFormat getFormat() {
+            return this.format;
+        }
+
+        @Nullable
+        public ShaderInstance getInstance() {
+            return this.instance;
+        }
+
+        public void setInstance(ShaderInstance instance) {
+            this.instance = instance;
+        }
     }
 }

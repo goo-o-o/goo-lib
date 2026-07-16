@@ -3,33 +3,43 @@ package com.goo.goo_lib.client.text.effect;
 import com.goo.goo_lib.client.registry.GLRenderTypes;
 import com.goo.goo_lib.client.registry.PostEffectRegistry;
 import com.goo.goo_lib.client.render.pipeline.ShaderPipeline;
-import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.client.text.effect.base.OverlayEffect;
-import com.goo.goo_lib.client.text.effect.config.BloomConfig;
-import com.goo.goo_lib.client.text.effect.config.base.EffectConfig;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
 
-public class BloomEffect implements TextEffect<BloomConfig>, OverlayEffect {
-    /**
-     * @param vertexData The geometric layout data of the character glyph.
-     * @param pX         Original horizontal drawing axis offset.
-     * @param pY         Original vertical drawing axis offset.
-     * @param dimFactor  Drop shadow intensity modifier.
-     * @param config     The custom type-safe configuration object containing parameters.
-     */
+public class BloomEffect implements TextEffect<Float>, OverlayEffect<Float> {
+
+
     @Override
-    public void applyEffect(GlyphVertexData vertexData, float pX, float pY, float dimFactor, BloomConfig config) {
-
+    public MapCodec<Float> codec() {
+        return Codec.FLOAT.optionalFieldOf("intensity", 0.6F);
     }
 
     @Override
-    public RenderType getOverlayRenderType(RenderType sourceType) {
+    public RenderType getOverlayRenderType(RenderType sourceType, Float config) {
         PostEffectRegistry.renderEffectForNextTick(GLRenderTypes.BLOOM_SHADER_LOCATION, ShaderPipeline.PipelineStage.GUI);
-        return GLRenderTypes.getBloom(sourceType);
+        return GLRenderTypes.getTextBloom(sourceType);
     }
 
     @Override
-    public float getOverlayAlpha(EffectConfig config) {
-        return config instanceof BloomConfig(float intensity) ? intensity : 0.8f;
+    public float getOverlayAlpha(Float config) {
+        return config;
+    }
+
+    public void prepareWaveUniforms(SmoothWaveEffect.Config activeWaveConfig) {
+        ShaderInstance instance = GLRenderTypes.InternalShaders.TEXT_BLOOM.getInstance();
+        if (instance != null) {
+            if (activeWaveConfig != null) {
+                instance.safeGetUniform("Speed").set(activeWaveConfig.speed());
+                instance.safeGetUniform("Amplitude").set(activeWaveConfig.amplitude());
+                instance.safeGetUniform("WaveFrequency").set(activeWaveConfig.frequency());
+            } else {
+                instance.safeGetUniform("Speed").set(0.0f);
+                instance.safeGetUniform("Amplitude").set(0.0f);
+                instance.safeGetUniform("WaveFrequency").set(0.0f);
+            }
+        }
     }
 }

@@ -36,9 +36,9 @@ public class ComponentParticle extends Particle {
 
 
         this.options = options;
-        this.component = options.getComponent().copy();
-        this.dropShadow = options.hasDropShadow();
-        this.bgColor = options.getBackgroundColor();
+        this.component = options.component().copy();
+        this.dropShadow = options.dropShadow();
+        this.bgColor = options.backgroundColor();
 
         this.lifetime = 60;
         this.hasPhysics = false;

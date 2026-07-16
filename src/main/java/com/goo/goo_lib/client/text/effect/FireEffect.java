@@ -1,26 +1,21 @@
 package com.goo.goo_lib.client.text.effect;
 
 import com.goo.goo_lib.client.registry.GLRenderTypes;
-import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.client.text.effect.base.OverlayEffect;
-import com.goo.goo_lib.client.text.effect.config.FireConfig;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.util.Unit;
 
-public class FireEffect implements TextEffect<FireConfig>, OverlayEffect {
-    /**
-     * @param vertexData The geometric layout data of the character glyph.
-     * @param pX         Original horizontal drawing axis offset.
-     * @param pY         Original vertical drawing axis offset.
-     * @param dimFactor  Drop shadow intensity modifier.
-     * @param config     The custom type-safe configuration object containing parameters.
-     */
+public class FireEffect implements TextEffect<Unit>, OverlayEffect<Unit> {
+
     @Override
-    public void applyEffect(GlyphVertexData vertexData, float pX, float pY, float dimFactor, FireConfig config) {
-
+    public RenderType getOverlayRenderType(RenderType sourceType, Unit config) {
+        return GLRenderTypes.getFlame(sourceType);
     }
 
+
     @Override
-    public RenderType getOverlayRenderType(RenderType sourceType) {
-        return GLRenderTypes.getFlame(sourceType);
+    public MapCodec<Unit> codec() {
+        return MapCodec.unit(Unit.INSTANCE);
     }
 }

@@ -2,11 +2,13 @@ package com.goo.goo_lib.mixin;
 
 import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.client.text.StyleEffectContainer;
-import com.goo.goo_lib.util.StyleEffectUtil;
 import com.goo.goo_lib.client.text.effect.base.ConfiguredEffect;
 import com.goo.goo_lib.util.RenderUtil;
+import com.goo.goo_lib.util.StyleEffectUtil;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.font.GlyphRenderTypes;
 import net.minecraft.client.gui.font.glyphs.BakedGlyph;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Style;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
@@ -46,53 +48,47 @@ public abstract class BakedGlyphMixin {
     @Final
     private float v1;
 
+    @Shadow @Final private GlyphRenderTypes renderTypes;
+
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     public void render(boolean pItalic, float pX, float pY, Matrix4f pMatrix,
                        VertexConsumer pBuffer, float pRed, float pGreen, float pBlue,
                        float pAlpha, int pPackedLight, CallbackInfo ci) {
 
         Style currentStyle = StyleEffectUtil.CURRENT_STYLE.get();
-        if (currentStyle == null) {
-            return;
-        }
+        if (currentStyle == null) return;
 
         List<ConfiguredEffect<?>> activeEffects = ((StyleEffectContainer) currentStyle).gl$getEffects();
-        if (activeEffects == null || activeEffects.isEmpty()) {
-            return;
-        }
+        if (activeEffects == null || activeEffects.isEmpty()) return;
 
         ci.cancel();
 
-        // ── Build vertex data ────────────────────────────────────────────────
-
-        float italicTopOffset = pItalic ? 1.0F - 0.25F * this.up : 0.0F;
-        float italicBottomOffset = pItalic ? 1.0F - 0.25F * this.down : 0.0F;
-        float dimFactor = (pRed == 0.25F && pGreen == 0.25F && pBlue == 0.25F) ? 0.25F : 1.0F;
+        float italicTopOffset    = pItalic ? 1.0F - 0.25F * this.up   : 0.0F;
+        float italicBottomOffset = pItalic ? 1.0F - 0.25F * this.down  : 0.0F;
+        float dimFactor          = (pRed == 0.25F && pGreen == 0.25F && pBlue == 0.25F) ? 0.25F : 1.0F;
 
         GlyphVertexData vertexData = new GlyphVertexData(
                 pX + this.left, pX + this.right,
-                pY + this.up, pY + this.down,
+                pY + this.up,   pY + this.down,
                 italicTopOffset, italicBottomOffset
         );
+        for (int i = 0; i < 4; i++) vertexData.setCornerColor(i, pRed, pGreen, pBlue);
 
-        for (int i = 0; i < 4; i++) {
-            vertexData.setCornerColor(i, pRed, pGreen, pBlue);
+        for (ConfiguredEffect<?> effect : activeEffects) {
+            effect.run(vertexData, pX, pY, dimFactor);
         }
 
-        // ── Run effects ──────────────────────────────────────────────────────
+        RenderUtil.drawGlyphQuad(pBuffer, pMatrix, vertexData, pAlpha,
+                this.u0, this.v0, this.u1, this.v1, pPackedLight);
 
-        for (ConfiguredEffect<?> configuredEffect : activeEffects) {
-            configuredEffect.run(vertexData, pX, pY, dimFactor);
-        }
-        RenderUtil.drawGlyphQuad(pBuffer, pMatrix, vertexData, pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
-
-        // ── Secondary overlay passes (bloom, fire, fog, …) ────────────────────
-
+        // Overlay passes — resolve render type using the glyph's actual font render type
         List<StyleEffectUtil.OverlayPass> passes = StyleEffectUtil.OVERLAY_PASSES.get();
         if (passes != null) {
             for (StyleEffectUtil.OverlayPass pass : passes) {
-                VertexConsumer overlayBuffer = StyleEffectUtil.TEXT_EFFECT_BUFFER.getBuffer(pass.renderType());
-                RenderUtil.drawGlyphQuad(overlayBuffer, pMatrix, vertexData, pass.alpha() * pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
+                RenderType overlayType = pass.renderType();
+                VertexConsumer overlayBuffer = StyleEffectUtil.TEXT_EFFECT_BUFFER.getBuffer(overlayType);
+                RenderUtil.drawGlyphQuad(overlayBuffer, pMatrix, vertexData,
+                        pass.alpha() * pAlpha, this.u0, this.v0, this.u1, this.v1, pPackedLight);
             }
             StyleEffectUtil.OVERLAY_PASSES.remove();
         }

@@ -17,7 +17,7 @@ public class StyleEffectUtil {
      * Shared secondary-render buffer for all text overlay effects.
      * Glyph mixins write overlay quads here; it is flushed by the GUI pipeline before post-processing.
      */
-    public static final MultiBufferSource.BufferSource TEXT_EFFECT_BUFFER = MultiBufferSource.immediate(new ByteBufferBuilder(1024));
+    public static final MultiBufferSource.BufferSource TEXT_EFFECT_BUFFER = MultiBufferSource.immediate(new ByteBufferBuilder(1024 * 64));
 
     /**
      * One entry per overlay effect active for the current glyph.
@@ -27,7 +27,8 @@ public class StyleEffectUtil {
 
     public static final ThreadLocal<Style> CURRENT_STYLE = ThreadLocal.withInitial(() -> Style.EMPTY);
 
-    public record OverlayPass(RenderType renderType, float alpha) {}
+    public record OverlayPass(RenderType renderType, float alpha) {
+    }
 
     public static Style createStyleWithEffects(Style base, List<ConfiguredEffect<?>> effects) {
         Style fresh = copyOf(base);

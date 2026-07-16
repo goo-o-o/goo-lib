@@ -39,7 +39,6 @@
     "ClientPacketListenerMixin",
     "CompositeRenderTypeAccessor",
     "CompositeStateAccessor",
-    "FontMixin",
     "ItemInHandRendererMixin",
     "ItemRendererMixin",
     "LevelRendererMixin",

@@ -1,6 +1,6 @@
 {
-  "vertex": "goo_lib:rendertype_abyssal",
-  "fragment": "goo_lib:rendertype_abyssal",
+  "vertex": "goo_lib:rendertype_text_abyssal",
+  "fragment": "goo_lib:rendertype_text_abyssal",
   "attributes": ["Position", "Color", "UV0", "UV2"],
   "samplers": [
     { "name": "Sampler0" },
