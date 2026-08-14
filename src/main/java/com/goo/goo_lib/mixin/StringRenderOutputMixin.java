@@ -6,7 +6,6 @@ import com.goo.goo_lib.client.text.effect.BloomEffect;
 import com.goo.goo_lib.client.text.effect.SmoothWaveEffect;
 import com.goo.goo_lib.client.text.effect.base.ConfiguredEffect;
 import com.goo.goo_lib.client.text.effect.base.OverlayEffect;
-import com.goo.goo_lib.util.StyleEffectUtil;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -16,9 +15,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,12 +34,8 @@ public abstract class StringRenderOutputMixin {
 
     @Shadow
     @Final
-    private Font this$0;
+    Font this$0;
 
-    @Inject(method = "finish", at = @At("TAIL"))
-    private void clearBufferSource(int backgroundColor, float x, CallbackInfoReturnable<Float> cir) {
-        StyleEffectUtil.OVERLAY_PASSES.remove();
-    }
 
     @Redirect(
             method = "accept",
@@ -70,10 +63,9 @@ public abstract class StringRenderOutputMixin {
             }
         }
 
-        List<StyleEffectUtil.OverlayPass> passes = null;
+        List<GlyphVertexConsumer.OverlayPass> passes = null;
         for (ConfiguredEffect<?> configuredEffect : activeEffects) {
             if (configuredEffect.getEffect() instanceof OverlayEffect<?> overlay) {
-                float alpha = configuredEffect.getOverlayAlpha();
                 if (passes == null) passes = new ArrayList<>();
 
                 @SuppressWarnings("unchecked")
@@ -86,18 +78,15 @@ public abstract class StringRenderOutputMixin {
                 }
 
                 if (overlayType != null)
-                    passes.add(new StyleEffectUtil.OverlayPass(overlayType, alpha));
+                    passes.add(new GlyphVertexConsumer.OverlayPass(overlayType, rawOverlay, configuredEffect.getConfig()));
 
                 finalRenderType = rawOverlay.modifyOriginalRenderType(finalRenderType, configuredEffect.getConfig());
-
             }
         }
-        if (passes != null) {
-            StyleEffectUtil.OVERLAY_PASSES.set(passes);
-        }
-
 
         VertexConsumer targetedBuffer = bufferSource.getBuffer(finalRenderType);
-        return new GlyphVertexConsumer(targetedBuffer, style, index, this$0, this.dimFactor, this.dropShadow, codePoint);
+        GlyphVertexConsumer proxy = new GlyphVertexConsumer(targetedBuffer, style, index, this$0, this.dimFactor, this.dropShadow, codePoint);
+        proxy.overlayPasses = passes; // null if none
+        return proxy;
     }
 }

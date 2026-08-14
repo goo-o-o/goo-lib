@@ -5,6 +5,7 @@ import com.mojang.blaze3d.font.GlyphInfo;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Builder;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.FontSet;
@@ -19,6 +20,7 @@ public class SwingEffect implements TextEffect<SwingEffect.Config> {
         return Config.CODEC;
     }
 
+    @Builder
     public record Config(float frequency, float angle, float phase) {
         public static final MapCodec<SwingEffect.Config> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
                 Codec.FLOAT.optionalFieldOf("frequency", 1F).forGetter(SwingEffect.Config::frequency),

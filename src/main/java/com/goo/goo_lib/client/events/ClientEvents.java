@@ -1,10 +1,11 @@
 package com.goo.goo_lib.client.events;
 
 import com.goo.goo_lib.client.particle.ComponentParticle;
+import com.goo.goo_lib.client.particle.TrailParticle;
 import com.goo.goo_lib.client.particle.gui.GuiParticleSystem;
 import com.goo.goo_lib.client.registry.GLParticles;
 import com.goo.goo_lib.client.registry.GLRenderTypes;
-import com.goo.goo_lib.client.registry.PostEffectRegistry;
+import com.goo.goo_lib.client.render.PostEffectRegistry;
 import com.goo.goo_lib.client.render.OutlineColorRegistry;
 import com.goo.goo_lib.common.GooLib;
 import com.goo.goo_lib.util.screenshake.ScreenShakeUtil;
@@ -37,6 +38,8 @@ public class ClientEvents {
                 }
             }
         }
+        PostEffectRegistry.processEffects(Minecraft.getInstance().getMainRenderTarget(), event.getStage());
+        PostEffectRegistry.blitEffects(event.getStage());
     }
 
     @SubscribeEvent
@@ -61,8 +64,8 @@ public class ClientEvents {
             protected void apply(@NotNull Void object, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
                 GLRenderTypes.clearCaches();
                 OutlineColorRegistry.clear();
-                PostEffectRegistry.onInitializeOutline(resourceManager);
 
+                PostEffectRegistry.onInitializeOutline(resourceManager);
             }
         });
     }
@@ -78,6 +81,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onRegisterParticleProviders(RegisterParticleProvidersEvent event) {
         event.registerSpecial(GLParticles.COMPONENT_PARTICLE.get(), new ComponentParticle.Provider());
+        event.registerSpriteSet(GLParticles.TRAIL_PARTICLE.get(), TrailParticle.Provider::new);
     }
 
     // ── GUI pipelines: clear input targets at start of each frame ─────────

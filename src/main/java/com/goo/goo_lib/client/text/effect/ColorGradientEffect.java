@@ -1,11 +1,12 @@
 package com.goo.goo_lib.client.text.effect;
 
 import com.goo.goo_lib.client.text.GlyphVertexData;
-import com.goo.goo_lib.util.ColorUtil;
+import com.goo.goo_lib.util.color.TooltipColorUtil;
 import com.goo.goo_lib.util.GLCodecs;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Builder;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FastColor;
@@ -15,8 +16,8 @@ import java.util.List;
 
 public class ColorGradientEffect implements TextEffect<ColorGradientEffect.Config> {
 
+    @Builder
     public record Config(List<Integer> colors, float spread, float waveSpeed) {
-
         public static final MapCodec<Config> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
                 GLCodecs.UNIVERSAL_COLOR_CODEC.listOf().fieldOf("colors").forGetter(Config::colors),
                 Codec.FLOAT.fieldOf("spread").forGetter(Config::spread),
@@ -31,8 +32,8 @@ public class ColorGradientEffect implements TextEffect<ColorGradientEffect.Confi
         float rightWorldX = pX + vertexData.positions[2].x;
 
         // Pulling dynamic settings straight from the config template
-        int colorLeft = ColorUtil.getGradientAt(leftWorldX, config.spread(), config.waveSpeed(), config.colors());
-        int colorRight = ColorUtil.getGradientAt(rightWorldX, config.spread(), config.waveSpeed(), config.colors());
+        int colorLeft = TooltipColorUtil.getGradientAt(leftWorldX, config.spread(), config.waveSpeed(), config.colors());
+        int colorRight = TooltipColorUtil.getGradientAt(rightWorldX, config.spread(), config.waveSpeed(), config.colors());
 
         applyRGBA(vertexData, 0, colorLeft, dimFactor);
         applyRGBA(vertexData, 1, colorLeft, dimFactor);

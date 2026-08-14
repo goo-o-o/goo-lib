@@ -1,41 +1,58 @@
 package com.goo.goo_lib.util.screenshake;
 
-import com.goo.goo_lib.common.network.ScreenShakePayload;
 import com.goo.goo_lib.util.MotionBlurUtil;
 import net.minecraft.client.Minecraft;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ScreenShakeUtil {
     // per player on client
-    private static final List<ShakeInstance> ACTIVE_SHAKES = new ArrayList<>();
-
-    public static void handleScreenShakePacket(final ScreenShakePayload packet, final IPayloadContext context) {
-        if (context.flow().isClientbound()) {
-            ShakeInstance instance = new ShakeInstance(new ShakeInstance.Builder()
-                    .identifier(packet.identifier())
-                    .speed(packet.speed())
-                    .duration(packet.durationTicks())
-                    .easeIn(packet.fadeInCurve(), packet.fadeInTicks())
-                    .easeOut(packet.fadeOutCurve(), packet.fadeOutTicks())
-                    .motionBlur(packet.motionBlur())
-                    .bounds(packet.maxX(), packet.maxY())
-                    .rotation(packet.maxPitch(), packet.maxYaw(), packet.maxRoll())
-                    .position(packet.sourcePos().orElse(null), packet.radius())
-            );
-            addShake(instance);
-        }
-    }
+    private static final Map<String, ShakeInstance> ACTIVE_SHAKES = new HashMap<>();
 
     /**
      * Safely register a completely custom configured screen shake layer.
      */
     public static void addShake(ShakeInstance instance) {
-        if (instance.motionBlur)
+        if (instance.motionBlur) {
             MotionBlurUtil.setEnabled(true);
-        ACTIVE_SHAKES.add(instance);
+        }
+
+        // if exists, we merge them taking the max values
+        ACTIVE_SHAKES.compute(instance.identifier, (id, existing) -> {
+            if (existing == null) return instance;
+
+            // capture where the shake currently is relative to its old life cycle
+            int originalRemainingTicks = existing.durationTicks - existing.getTicksElapsed();
+
+            // get the new duration, whatever is higher
+            int baselineNewDuration = Math.max(existing.durationTicks, instance.durationTicks);
+
+            // if the new instance implies a longer remaining time than what we have left, we shift the timeline
+            if (instance.durationTicks > originalRemainingTicks) {
+                // update the lifetime of the original to the new one
+                existing.durationTicks = baselineNewDuration;
+
+                // set ticks elapsed backwards by whatever the added time was
+                existing.setTicksElapsed(existing.durationTicks - instance.durationTicks);
+
+                // clamp
+                if (existing.getTicksElapsed() < 0) {
+                    existing.setTicksElapsed(0);
+                }
+            }
+
+            // 3. Update intensity configurations cleanly
+            existing.speed = Math.max(existing.speed, instance.speed);
+            existing.maxX = Math.max(existing.maxX, instance.maxX);
+            existing.maxY = Math.max(existing.maxY, instance.maxY);
+            existing.maxPitch = Math.max(existing.maxPitch, instance.maxPitch);
+            existing.maxYaw = Math.max(existing.maxYaw, instance.maxYaw);
+            existing.maxRoll = Math.max(existing.maxRoll, instance.maxRoll);
+            existing.motionBlur = existing.motionBlur || instance.motionBlur;
+
+            return existing;
+        });
     }
 
     public static void clearShakes() {
@@ -47,12 +64,12 @@ public class ScreenShakeUtil {
      * Different {@link ShakeInstance}s can have the same identifier
      */
     public static void removeShake(String identifier) {
-        ACTIVE_SHAKES.removeIf(s -> s.identifier.equals(identifier));
+        ACTIVE_SHAKES.remove(identifier);
     }
 
     public static void clientTick() {
         // updates instances and sweeps out expired objects automatically
-        ACTIVE_SHAKES.removeIf(ShakeInstance::tick);
+        ACTIVE_SHAKES.values().removeIf(ShakeInstance::tick);
         if (ACTIVE_SHAKES.isEmpty()) {
             MotionBlurUtil.setEnabled(false);
         }
@@ -70,7 +87,7 @@ public class ScreenShakeUtil {
 
         float totalX = 0, totalY = 0, totalPitch = 0, totalYaw = 0, totalRoll = 0;
 
-        for (ShakeInstance shake : ACTIVE_SHAKES) {
+        for (ShakeInstance shake : ACTIVE_SHAKES.values()) {
             ShakeInstance.CalculatedOffsets offsets = shake.getOffsets(partialTicks);
             totalX += offsets.x();
             totalY += offsets.y();
@@ -90,7 +107,7 @@ public class ScreenShakeUtil {
 
         float maxX = 0, maxY = 0, maxPitch = 0, maxYaw = 0, maxRoll = 0;
 
-        for (ShakeInstance shake : ACTIVE_SHAKES) {
+        for (ShakeInstance shake : ACTIVE_SHAKES.values()) {
             ShakeInstance.CalculatedOffsets offsets = shake.getOffsets(partialTicks);
             if (offsets.x() > maxX) maxX = offsets.x();
             if (offsets.y() > maxY) maxY = offsets.y();

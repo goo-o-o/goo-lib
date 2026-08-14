@@ -2,8 +2,11 @@ package com.goo.goo_lib.client.render.pipeline;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
+@OnlyIn(Dist.CLIENT)
 public abstract class ScreenPostEffectPipeline extends ShaderPipeline {
 
     @Override

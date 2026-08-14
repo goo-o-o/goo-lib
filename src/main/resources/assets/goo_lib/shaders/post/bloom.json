@@ -1,13 +1,29 @@
 {
   "targets": ["input", "half", "quarter", "eighth", "sixteenth", "swap", "final"],
   "passes": [
-    { "name": "goo_lib:bloom_downsample", "intarget": "input",     "outtarget": "half",      "uniforms": [{ "name": "Spread", "values": [2.0]  }] },
-    { "name": "goo_lib:bloom_downsample", "intarget": "half",      "outtarget": "quarter",   "uniforms": [{ "name": "Spread", "values": [4.0]  }] },
-    { "name": "goo_lib:bloom_downsample", "intarget": "quarter",   "outtarget": "eighth",    "uniforms": [{ "name": "Spread", "values": [8.0] }] },
-    { "name": "goo_lib:bloom_downsample", "intarget": "eighth",    "outtarget": "sixteenth", "uniforms": [{ "name": "Spread", "values": [16.0] }] },
-    { "name": "goo_lib:bloom_upsample",   "intarget": "sixteenth", "outtarget": "eighth",    "uniforms": [{ "name": "Spread", "values": [8.0]  }] },
-    { "name": "goo_lib:bloom_upsample",   "intarget": "eighth",    "outtarget": "quarter",   "uniforms": [{ "name": "Spread", "values": [4.0]  }] },
-    { "name": "goo_lib:bloom_upsample",   "intarget": "quarter",   "outtarget": "swap",      "uniforms": [{ "name": "Spread", "values": [2.0]  }] },
-    { "name": "goo_lib:bloom_upsample",   "intarget": "swap",      "outtarget": "final",     "uniforms": [{ "name": "Spread", "values": [1.0]  }] }
+    { "name": "goo_lib:bloom_downsample", "intarget": "input",     "outtarget": "half",      "uniforms": [
+      { "name": "Spread", "values": [2.0] },
+      { "name": "DecodeIntensity", "values": [1.0] }
+    ] },
+    { "name": "goo_lib:bloom_downsample", "intarget": "half",      "outtarget": "quarter",   "uniforms": [
+      { "name": "Spread", "values": [3.0] },
+      { "name": "DecodeIntensity", "values": [0.0] }
+    ] },
+    { "name": "goo_lib:bloom_downsample", "intarget": "quarter",   "outtarget": "eighth",    "uniforms": [
+      { "name": "Spread", "values": [5.0] },
+      { "name": "DecodeIntensity", "values": [0.0] }
+    ] },
+    { "name": "goo_lib:bloom_downsample", "intarget": "eighth",    "outtarget": "sixteenth", "uniforms": [
+      { "name": "Spread", "values": [8.0] },
+      { "name": "DecodeIntensity", "values": [0.0] }
+    ] },
+    { "name": "goo_lib:bloom_upsample",   "intarget": "sixteenth", "outtarget": "eighth",    "uniforms": [
+      { "name": "Spread", "values": [8.0] }] },
+    { "name": "goo_lib:bloom_upsample",   "intarget": "eighth",    "outtarget": "quarter",   "uniforms": [
+      { "name": "Spread", "values": [5.0] }] },
+    { "name": "goo_lib:bloom_upsample",   "intarget": "quarter",   "outtarget": "swap",      "uniforms": [
+      { "name": "Spread", "values": [3.0] }] },
+    { "name": "goo_lib:bloom_upsample",   "intarget": "swap",      "outtarget": "final",     "uniforms": [
+      { "name": "Spread", "values": [2.0] }] }
   ]
 }

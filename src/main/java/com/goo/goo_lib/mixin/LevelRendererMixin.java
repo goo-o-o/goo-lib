@@ -1,6 +1,6 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.client.registry.PostEffectRegistry;
+import com.goo.goo_lib.client.render.PostEffectRegistry;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -49,23 +49,8 @@ public class LevelRendererMixin {
         PostEffectRegistry.clearAndBindWrite(this.minecraft.getMainRenderTarget());
     }
 
-    @Inject(method = "renderLevel",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/OutlineBufferSource;endOutlineBatch()V",
-                    shift = At.Shift.BEFORE
-            ))
-    private void onRenderLevelProcess(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
-        PostEffectRegistry.processEffects(this.minecraft.getMainRenderTarget());
-    }
 
-    @Inject(method = "renderLevel",
-            at = @At(
-                    value = "TAIL"
-            ))
-    private void onPostRenderLevel(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
-        PostEffectRegistry.blitEffects();
-    }
+
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

@@ -1,8 +1,7 @@
 package com.goo.goo_lib.client.text.effect;
 
 import com.goo.goo_lib.client.registry.GLRenderTypes;
-import com.goo.goo_lib.client.registry.PostEffectRegistry;
-import com.goo.goo_lib.client.render.pipeline.ShaderPipeline;
+import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.client.text.effect.base.OverlayEffect;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -14,19 +13,19 @@ public class BloomEffect implements TextEffect<Float>, OverlayEffect<Float> {
 
     @Override
     public MapCodec<Float> codec() {
-        return Codec.FLOAT.optionalFieldOf("intensity", 0.6F);
+        return Codec.FLOAT.optionalFieldOf("intensity", 0.9F);
     }
 
     @Override
-    public RenderType getOverlayRenderType(RenderType sourceType, Float config) {
-        PostEffectRegistry.renderEffectForNextTick(GLRenderTypes.BLOOM_SHADER_LOCATION, ShaderPipeline.PipelineStage.GUI);
+    public RenderType getOverlayRenderType(RenderType sourceType, Float intensity) {
         return GLRenderTypes.getTextBloom(sourceType);
     }
 
     @Override
-    public float getOverlayAlpha(Float config) {
-        return config;
+    public void modifyOverlayVertexData(GlyphVertexData overlayData, Float intensity) {
+        overlayData.setAlphas(intensity);
     }
+
 
     public void prepareWaveUniforms(SmoothWaveEffect.Config activeWaveConfig) {
         ShaderInstance instance = GLRenderTypes.InternalShaders.TEXT_BLOOM.getInstance();

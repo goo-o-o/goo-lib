@@ -19,14 +19,16 @@
   "attributes.goo_lib.villager_reputation.desc": "Affects the sale price of trades, as well as natural Iron Golem hostility",
   "attributes.goo_lib.healing_received": "Healing Received",
   "attributes.goo_lib.healing_received.desc": "Multiplier on how much healing is received",
-  "attributes.goo_lib.ground_friction_modifier": "Ground Friction",
-  "attributes.goo_lib.ground_friction_modifier.desc": "Modifier on how much Friction the entity faces",
-  "attributes.goo_lib.air_drag": "Air Drag",
-  "attributes.goo_lib.air_drag.desc": "Modifier on how much Air Drag the entity faces",
+  "attributes.goo_lib.friction_modifier": "Ground Friction",
+  "attributes.goo_lib.friction_modifier.desc": "Modifier on how much Friction the entity faces",
+  "attributes.goo_lib.air_drag_modifier": "Air Drag",
+  "attributes.goo_lib.air_drag_modifier.desc": "Modifier on how much Air Drag the entity faces",
   "attributes.goo_lib.wall_climbing": "Wall Climbing",
   "attributes.goo_lib.wall_climbing.desc": "Whether the entity is allowed to climb any wall",
   "attributes.goo_lib.climbing_speed_modifier": "Climbing Speed Modifier",
   "attributes.goo_lib.climbing_speed_modifier.desc": "Modifier on how fast the entity climbs",
   "attributes.goo_lib.boat_speed_modifier": "Boat Speed Modifier",
-  "attributes.goo_lib.boat_speed_modifier.desc": "Increases the speed of the boat"
+  "attributes.goo_lib.boat_speed_modifier.desc": "Increases the speed of the boat",
+  "attributes.goo_lib.elytra_acceleration_modifier": "Elytra Acceleration Modifier",
+  "attributes.goo_lib.elytra_acceleration_modifier.desc": "Increases the acceleration of the Elytra in all directions"
 }

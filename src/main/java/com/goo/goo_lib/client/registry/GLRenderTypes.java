@@ -1,21 +1,18 @@
 package com.goo.goo_lib.client.registry;
 
+import com.goo.goo_lib.client.render.PostEffectRegistry;
 import com.goo.goo_lib.client.render.pipeline.ShaderPipeline;
 import com.goo.goo_lib.common.GooLib;
 import com.goo.goo_lib.mixin.CompositeRenderTypeAccessor;
 import com.goo.goo_lib.mixin.CompositeStateAccessor;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.ParticleRenderType;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
@@ -25,6 +22,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterShadersEvent;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -36,7 +34,39 @@ import static net.minecraft.client.renderer.RenderStateShard.*;
 
 @EventBusSubscriber(modid = GooLib.MOD_ID, value = Dist.CLIENT)
 public class GLRenderTypes {
+    public static final ParticleRenderType PARTICLE_SHEET_TRANSLUCENT_NO_CULL = new ParticleRenderType() {
+        @Override
+        public BufferBuilder begin(Tesselator p_350826_, TextureManager p_107456_) {
+            RenderSystem.depthMask(true);
+            RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_PARTICLES);
+            RenderSystem.enableBlend();
+            RenderSystem.disableCull();
+            RenderSystem.defaultBlendFunc();
+            return p_350826_.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+        }
 
+        @Override
+        public String toString() {
+            return "PARTICLE_SHEET_TRANSLUCENT_NO_CULL";
+        }
+    };
+
+    public static final ParticleRenderType PARTICLE_TRANSLUCENT_NO_CULL = new ParticleRenderType() {
+        public BufferBuilder begin(Tesselator tesselator, TextureManager textureManager) {
+            RenderSystem.enableDepthTest();
+            RenderSystem.depthFunc(GL11.GL_LEQUAL);
+            RenderSystem.depthMask(true);
+            RenderSystem.enableBlend();
+            RenderSystem.disableCull();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            return tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        }
+
+        public String toString() {
+            return "PARTICLE_TRANSLUCENT_NO_CULL";
+        }
+    };
     public static final ParticleRenderType PARTICLE_SHEET_TRANSLUCENT_NO_FOG = new ParticleRenderType() {
         @Override
         public BufferBuilder begin(Tesselator tesselator, TextureManager textureManager) {
@@ -55,10 +85,19 @@ public class GLRenderTypes {
         }
     };
 
+    /**
+     * Shared secondary-render buffer for all text overlay effects.
+     * Glyph mixins write overlay quads here; it is flushed by the GUI pipeline before post-processing.
+     */
+    public static final MultiBufferSource.BufferSource TEXT_EFFECT_BUFFER = MultiBufferSource.immediate(new ByteBufferBuilder(1024 * 64));
+    public static final MultiBufferSource.BufferSource BLOOM_BUFFER_SOURCE = MultiBufferSource.immediate(new ByteBufferBuilder(1024 * 64));
+
     private static final Map<RenderType, RenderType> TEXT_BLOOM_CACHE = new HashMap<>();
+    private static final Map<ResourceLocation, RenderType> BLOOM_CACHE = new HashMap<>();
 
     public static void clearCaches() {
         TEXT_BLOOM_CACHE.clear();
+        BLOOM_CACHE.clear();
     }
 
 
@@ -119,6 +158,7 @@ public class GLRenderTypes {
     public static RenderType getSmoothWave(RenderType source) {
         return createTextRenderType("smooth_wave", source, InternalShaders.TEXT_SMOOTH_WAVE::getInstance);
     }
+
     public static RenderType getAcid(RenderType source) {
         return createTextRenderType("acid", source, InternalShaders.TEXT_ACID::getInstance);
     }
@@ -243,10 +283,10 @@ public class GLRenderTypes {
     }
 
     public static RenderType getBlurRenderType(ResourceLocation locationIn) {
-        return getBlurRenderType(locationIn, LEQUAL_DEPTH_TEST);
+        return getBlurRenderType(locationIn, LEQUAL_DEPTH_TEST, CULL);
     }
 
-    public static RenderType getBlurRenderType(ResourceLocation locationIn, DepthTestStateShard depthTestStateShard) {
+    public static RenderType getBlurRenderType(ResourceLocation locationIn, DepthTestStateShard depthTestStateShard, CullStateShard cullStateShard) {
         return RenderType.create(
                 GooLib.MOD_ID + ":blur_" + depthTestStateShard,
                 DefaultVertexFormat.POSITION_TEX_COLOR,
@@ -256,30 +296,86 @@ public class GLRenderTypes {
                         .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders.BLUR::getInstance))
                         .setTextureState(new RenderStateShard.TextureStateShard(locationIn, false, false))
                         .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                        .setCullState(cullStateShard)
                         .setDepthTestState(depthTestStateShard)
                         .setOutputState(BLUR_OUTPUT)
                         .createCompositeState(true)
         );
     }
 
-    public static RenderType getBloomRenderType(ResourceLocation locationIn) {
-        return getBloomRenderType(locationIn, LEQUAL_DEPTH_TEST);
+    public static RenderType getPixelateRenderType(DepthTestStateShard depthTestStateShard, CullStateShard cullStateShard) {
+        return RenderType.create(
+                GooLib.MOD_ID + ":pixelate_" + depthTestStateShard,
+                DefaultVertexFormat.NEW_ENTITY,
+                VertexFormat.Mode.QUADS,
+                256, false, false,
+                RenderType.CompositeState.builder()
+                        .setShaderState(RenderStateShard.RENDERTYPE_ENTITY_CUTOUT_SHADER)
+                        .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                        .setCullState(cullStateShard)
+                        .setDepthTestState(depthTestStateShard)
+                        .setOutputState(PIXELATE_OUTPUT)
+                        .createCompositeState(true)
+        );
     }
 
-    public static RenderType getBloomRenderType(ResourceLocation locationIn, DepthTestStateShard depthTestStateShard) {
+    public static RenderType getPixelateScreenRenderType(ResourceLocation locationIn, DepthTestStateShard depthTestStateShard, CullStateShard cullStateShard) {
         return RenderType.create(
+                GooLib.MOD_ID + ":pixelate_screen_" + depthTestStateShard,
+                DefaultVertexFormat.NEW_ENTITY,
+                VertexFormat.Mode.QUADS,
+                256, false, false,
+                RenderType.CompositeState.builder()
+                        .setShaderState(RENDERTYPE_ITEM_ENTITY_TRANSLUCENT_CULL_SHADER)
+                        .setTextureState(new RenderStateShard.TextureStateShard(locationIn, false, false))
+                        .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                        .setCullState(cullStateShard)
+                        .setDepthTestState(depthTestStateShard)
+                        .setOutputState(PIXELATE_OUTPUT_SCREEN)
+                        .createCompositeState(true)
+        );
+    }
+
+    public static RenderType getPixelateRenderType(ResourceLocation locationIn, DepthTestStateShard depthTestStateShard, CullStateShard cullStateShard) {
+        return RenderType.create(
+                GooLib.MOD_ID + ":pixelate_" + depthTestStateShard,
+                DefaultVertexFormat.NEW_ENTITY,
+                VertexFormat.Mode.QUADS,
+                256, false, true,
+                RenderType.CompositeState.builder()
+                        .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders.PIXELATE::getInstance))
+                        .setTextureState(new RenderStateShard.TextureStateShard(locationIn, false, false))
+                        .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                        .setCullState(cullStateShard)
+                        .setDepthTestState(depthTestStateShard)
+                        .setOutputState(PIXELATE_OUTPUT)
+                        .createCompositeState(true)
+        );
+    }
+
+    public static RenderType getBloomRenderType(ResourceLocation locationIn) {
+        return getBloomRenderType(locationIn, LEQUAL_DEPTH_TEST, CULL);
+    }
+
+    public static RenderType getBloomRenderType(ResourceLocation locationIn, DepthTestStateShard depthTestStateShard, CullStateShard cullStateShard) {
+        return getBloomRenderType(locationIn, depthTestStateShard, cullStateShard, DefaultVertexFormat.POSITION_TEX_COLOR);
+    }
+
+    public static RenderType getBloomRenderType(ResourceLocation locationIn, DepthTestStateShard depthTestStateShard, CullStateShard cullStateShard, VertexFormat format) {
+        return BLOOM_CACHE.computeIfAbsent(locationIn, texture -> RenderType.create(
                 GooLib.MOD_ID + ":bloom_" + depthTestStateShard,
-                DefaultVertexFormat.POSITION_TEX_COLOR,
+                format,
                 VertexFormat.Mode.QUADS,
                 256, false, true,
                 RenderType.CompositeState.builder()
                         .setShaderState(new RenderStateShard.ShaderStateShard(InternalShaders.BLOOM::getInstance))
-                        .setTextureState(new RenderStateShard.TextureStateShard(locationIn, false, false))
+                        .setTextureState(new RenderStateShard.TextureStateShard(texture, false, false))
+                        .setCullState(cullStateShard)
                         .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
                         .setDepthTestState(depthTestStateShard)
                         .setOutputState(BLOOM_OUTPUT_ENTITY)
                         .createCompositeState(true)
-        );
+        ));
     }
 
     /**
@@ -289,8 +385,23 @@ public class GLRenderTypes {
 
 
     public static final ResourceLocation BLUR_SHADER_LOCATION = GooLib.loc("shaders/post/blur.json");
-    protected static final RenderStateShard.OutputStateShard BLUR_OUTPUT = new RenderStateShard.OutputStateShard("blur_target", () -> {
-        RenderTarget target = PostEffectRegistry.getRenderTargetFor(BLUR_SHADER_LOCATION, ShaderPipeline.PipelineStage.ENTITY);
+    public static final RenderStateShard.OutputStateShard BLUR_OUTPUT = new RenderStateShard.OutputStateShard("blur_target", () -> {
+        RenderTarget target = PostEffectRegistry.getRenderTargetFor(BLUR_SHADER_LOCATION, ShaderPipeline.PipelineStage.WORLD);
+        if (target != null) {
+            target.copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
+            target.bindWrite(false);
+        }
+    }, () -> Minecraft.getInstance().getMainRenderTarget().bindWrite(false));
+
+    public static final ResourceLocation PIXELATE_SHADER_LOCATION = GooLib.loc("shaders/post/pixelate.json");
+    public static final RenderStateShard.OutputStateShard PIXELATE_OUTPUT = new RenderStateShard.OutputStateShard("pixelate_target", () -> {
+        RenderTarget target = PostEffectRegistry.getRenderTargetFor(PIXELATE_SHADER_LOCATION, ShaderPipeline.PipelineStage.WORLD);
+        if (target != null) {
+            target.bindWrite(false);
+        }
+    }, () -> Minecraft.getInstance().getMainRenderTarget().bindWrite(false));
+    public static final RenderStateShard.OutputStateShard PIXELATE_OUTPUT_SCREEN = new RenderStateShard.OutputStateShard("pixelate_target", () -> {
+        RenderTarget target = PostEffectRegistry.getRenderTargetFor(PIXELATE_SHADER_LOCATION, ShaderPipeline.PipelineStage.SCREEN);
         if (target != null) {
             target.copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
             target.bindWrite(false);
@@ -299,7 +410,7 @@ public class GLRenderTypes {
 
 
     public static final ResourceLocation BLOOM_SHADER_LOCATION = GooLib.loc("shaders/post/bloom.json");
-    protected static final RenderStateShard.OutputStateShard BLOOM_OUTPUT_GUI = new RenderStateShard.OutputStateShard("bloom_target", () -> {
+    public static final RenderStateShard.OutputStateShard BLOOM_OUTPUT_GUI = new RenderStateShard.OutputStateShard("bloom_target", () -> {
         RenderTarget target = PostEffectRegistry.getTempTarget(BLOOM_SHADER_LOCATION, ShaderPipeline.PipelineStage.GUI, "input");
         if (target != null) {
             // since we are getting a custom buffer named "input" and not the main minecraft render target, we need to clear it manually. done in onBeforeEntities now
@@ -308,8 +419,8 @@ public class GLRenderTypes {
         }
     }, () -> Minecraft.getInstance().getMainRenderTarget().bindWrite(false));
 
-    protected static final RenderStateShard.OutputStateShard BLOOM_OUTPUT_ENTITY = new RenderStateShard.OutputStateShard("bloom_target", () -> {
-        RenderTarget target = PostEffectRegistry.getTempTarget(BLOOM_SHADER_LOCATION, ShaderPipeline.PipelineStage.ENTITY, "input");
+    public static final RenderStateShard.OutputStateShard BLOOM_OUTPUT_ENTITY = new RenderStateShard.OutputStateShard("bloom_target", () -> {
+        RenderTarget target = PostEffectRegistry.getTempTarget(BLOOM_SHADER_LOCATION, ShaderPipeline.PipelineStage.WORLD, "input");
         if (target != null) {
             // since we are getting a custom buffer named "input" and not the main minecraft render target, we need to clear it manually. done in onBeforeEntities now
             target.copyDepthFrom(Minecraft.getInstance().getMainRenderTarget());
@@ -323,8 +434,10 @@ public class GLRenderTypes {
     public static void registerShaders(RegisterShadersEvent event) {
         try {
             for (InternalShaders shader : InternalShaders.values()) {
+
                 event.registerShader(
-                        new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_" + shader.name().toLowerCase(Locale.ROOT)), shader.getFormat()),
+                        new ShaderInstance(event.getResourceProvider(), GooLib.loc("rendertype_" + shader.name().toLowerCase(Locale.ROOT)),
+                                shader.getFormat()),
                         shader::setInstance
                 );
             }
@@ -343,6 +456,8 @@ public class GLRenderTypes {
         TEXT_SMOOTH_WAVE(DefaultVertexFormat.POSITION_TEX_COLOR),
         TEXT_ACID(DefaultVertexFormat.POSITION_TEX_COLOR),
         BLUR(DefaultVertexFormat.POSITION_TEX_COLOR),
+        PIXELATE(DefaultVertexFormat.POSITION_TEX_COLOR),
+        PIXELATE_COMPOSITE(DefaultVertexFormat.BLIT_SCREEN), // new
         BLOOM(DefaultVertexFormat.POSITION_TEX_COLOR),
         FIRE_TEXTURE(DefaultVertexFormat.POSITION_TEX_COLOR),
         ITEM_OUTLINE(DefaultVertexFormat.POSITION_TEX_COLOR),
@@ -351,15 +466,13 @@ public class GLRenderTypes {
         MOLTEN(DefaultVertexFormat.POSITION_COLOR),
         GALAXY(DefaultVertexFormat.POSITION_COLOR);
 
+        @Getter
         private final VertexFormat format;
+        @Setter
         private ShaderInstance instance;
 
         InternalShaders(VertexFormat format) {
             this.format = format;
-        }
-
-        public VertexFormat getFormat() {
-            return this.format;
         }
 
         @Nullable
@@ -367,8 +480,5 @@ public class GLRenderTypes {
             return this.instance;
         }
 
-        public void setInstance(ShaderInstance instance) {
-            this.instance = instance;
-        }
     }
 }

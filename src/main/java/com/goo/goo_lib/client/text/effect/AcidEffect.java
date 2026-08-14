@@ -5,6 +5,7 @@ import com.goo.goo_lib.client.text.effect.base.OverlayEffect;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Builder;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 
@@ -16,6 +17,7 @@ public class AcidEffect implements TextEffect<AcidEffect.Config>, OverlayEffect<
         return Config.CODEC;
     }
 
+    @Builder
     public record Config(
             float speed,
             float amplitude,            // in pixels
@@ -29,6 +31,7 @@ public class AcidEffect implements TextEffect<AcidEffect.Config>, OverlayEffect<
             float thicknessFlowSpeed,   // how "wide" the fat/thin regions of the ribbon are, in world space
             float thicknessVariance     // how fast the thickness pattern drifts along the ribbon over time
     ) {
+
         public static final MapCodec<AcidEffect.Config> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
                 Codec.FLOAT.optionalFieldOf("speed", 1.0F).forGetter(AcidEffect.Config::speed),
                 Codec.FLOAT.optionalFieldOf("amplitude", 2.0F).forGetter(AcidEffect.Config::amplitude),

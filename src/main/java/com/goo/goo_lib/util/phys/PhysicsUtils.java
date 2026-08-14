@@ -1,4 +1,4 @@
-package com.goo.goo_lib.common.attribute;
+package com.goo.goo_lib.util.phys;
 
 import com.goo.goo_lib.common.registry.GLAttributes;
 import net.minecraft.core.Holder;
@@ -7,7 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 
-public class FrictionCalculator {
+public class PhysicsUtils {
     public static float handleFriction(LivingEntity livingEntity, float originalFriction) {
         Holder<Attribute> attributeToUse;
         double vanillaSlowdownRate;

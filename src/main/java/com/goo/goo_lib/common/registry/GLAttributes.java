@@ -93,4 +93,9 @@ public class GLAttributes {
             1, 0, 1000
     ).setSyncable(true));
 
+    public static final Holder<Attribute> ELYTRA_ACCELERATION_MODIFIER = ATTRIBUTES.register("elytra_acceleration_modifier", () -> new PercentageAttribute(
+            prepend("elytra_acceleration_modifier"),
+            1, 0, 1000
+    ).setSyncable(true));
+
 }

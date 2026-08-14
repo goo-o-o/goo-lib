@@ -1,0 +1,12 @@
+{
+  "vertex": "goo_lib:rendertype_pixelate_composite",
+  "fragment": "goo_lib:rendertype_pixelate_composite",
+  "attributes": ["Position"],
+  "samplers": [
+    { "name": "DiffuseSampler" },
+    { "name": "DepthSampler" },
+    { "name": "MainDepthSampler" }
+  ],
+  "uniforms": [
+  ]
+}

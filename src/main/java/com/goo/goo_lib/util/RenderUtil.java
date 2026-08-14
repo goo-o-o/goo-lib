@@ -10,38 +10,13 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.metadata.gui.GuiSpriteScaling;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.joml.Matrix4f;
 
+@OnlyIn(Dist.CLIENT)
 public class RenderUtil {
-
-    /**
-     * Renders a double sided quad
-     */
-    public static void drawDoubleSidedQuad(VertexConsumer consumer, Matrix4f matrix,
-                                         float width, float height,
-                                         float u0, float u1, float v0, float v1,
-                                         int packedLight, int r, int g, int b, int a) {
-        float halfWidth = width / 2;
-        // front
-        consumer.addVertex(matrix, -halfWidth, height, 0.0F).setColor(r, g, b, a).setUv(u0, v0)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
-        consumer.addVertex(matrix, -halfWidth, 0.0F, 0.0F).setColor(r, g, b, a).setUv(u0, v1)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
-        consumer.addVertex(matrix, halfWidth, 0.0F, 0.0F).setColor(r, g, b, a).setUv(u1, v1)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
-        consumer.addVertex(matrix, halfWidth, height, 0.0F).setColor(r, g, b, a).setUv(u1, v0)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, 1.0F);
-
-        // back
-        consumer.addVertex(matrix, halfWidth, height, 0.0F).setColor(r, g, b, a).setUv(u1, v0)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, -1.0F);
-        consumer.addVertex(matrix, halfWidth, 0.0F, 0.0F).setColor(r, g, b, a).setUv(u1, v1)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, -1.0F);
-        consumer.addVertex(matrix, -halfWidth, 0.0F, 0.0F).setColor(r, g, b, a).setUv(u0, v1)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, -1.0F);
-        consumer.addVertex(matrix, -halfWidth, height, 0.0F).setColor(r, g, b, a).setUv(u0, v0)
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(0.0F, 0.0F, -1.0F);
-    }
+    
 
     public static void drawQuad(VertexConsumer consumer, Matrix4f matrix,
                                            float width, float height,

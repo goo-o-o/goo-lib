@@ -4,6 +4,7 @@ import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Builder;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Style;
@@ -12,6 +13,7 @@ import org.joml.Matrix4f;
 
 public class TurbulenceEffect implements TextEffect<TurbulenceEffect.Config> {
 
+    @Builder
     public record Config(float amplitude, float frequency) {
         public static final MapCodec<Config> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
                 Codec.FLOAT.optionalFieldOf("amplitude", 1F).forGetter(Config::amplitude),

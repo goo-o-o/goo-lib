@@ -6,6 +6,7 @@ import com.mojang.blaze3d.font.GlyphInfo;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Builder;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.FontSet;
@@ -21,6 +22,7 @@ public class PendulumEffect implements TextEffect<PendulumEffect.Config> {
         return Config.CODEC;
     }
 
+    @Builder
     public record Config(float frequency, float angle, float radius, Vector2f offset) {
         public static final MapCodec<Config> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
                 Codec.FLOAT.optionalFieldOf("frequency", 1.0F).forGetter(Config::frequency),

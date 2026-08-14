@@ -1,8 +1,11 @@
 package com.goo.goo_lib.client.render.pipeline;
 
 import net.minecraft.client.renderer.PostChain;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 
+@OnlyIn(Dist.CLIENT)
 public abstract class GuiShaderPipeline extends ShaderPipeline {
 
     @Override

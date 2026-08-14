@@ -4,6 +4,7 @@ import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Builder;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Style;
@@ -17,6 +18,7 @@ public class CircleEffect implements TextEffect<CircleEffect.Config> {
         return Config.CODEC;
     }
 
+    @Builder
     public record Config(float radius, float frequency, float phase) {
         public static final MapCodec<CircleEffect.Config> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
                 Codec.FLOAT.optionalFieldOf("radius", 1.0F).forGetter(CircleEffect.Config::radius),

@@ -13,6 +13,7 @@ import org.joml.Vector4f;
 import java.util.List;
 
 public class GLCodecs {
+
     private static final Codec<Integer> HEX_STRING_CODEC = Codec.STRING.comapFlatMap(
             str -> {
                 if (!str.startsWith("#")) return DataResult.error(() -> "Hex color must start with '#'");
@@ -64,5 +65,6 @@ public class GLCodecs {
             .comapFlatMap(
                     floats -> Util.fixedSize(floats, 2).map(floatList -> new Vector2f(floatList.getFirst(), floatList.get(1))),
                     s -> List.of(s.x(), s.y()));
+
 
 }

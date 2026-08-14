@@ -6,11 +6,13 @@ import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@OnlyIn(Dist.CLIENT)
 public class GuiParticleSystem {
 
     private static final GuiParticleSystem INSTANCE = new GuiParticleSystem();

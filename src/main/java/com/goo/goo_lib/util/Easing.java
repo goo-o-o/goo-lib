@@ -1,11 +1,14 @@
 package com.goo.goo_lib.util;
 
+import lombok.Getter;
+
 import java.util.function.Function;
 
 import static java.lang.Math.*;
 
 // https://easings.net/
 // https://gist.github.com/dev-hydrogen/21a66f83f0386123e0c0acf107254843
+@Getter
 public enum Easing {
     EASE_LINEAR(x -> x),
     EASE_IN_SINE(x -> 1 - cos((x * PI) / 2)),
@@ -37,13 +40,8 @@ public enum Easing {
     EASE_IN_OUT_ELASTIC(x -> x == 0 ? 0 : x == 1 ? 1 : x < 0.5 ? -(pow(2, 20 * x - 10) * sin((20 * x - 11.125) * ((2 * PI) / 4.5))) / 2 : (pow(2, -20 * x + 10) * sin((20 * x - 11.125) * ((2 * PI) / 4.5))) / 2 + 1);
 
     final Function<Double, Number> function;
-
     Easing(Function<Double, Number> function) {
         this.function = function;
-    }
-
-    public Function<Double, Number> getFunction() {
-        return function;
     }
 
     /**

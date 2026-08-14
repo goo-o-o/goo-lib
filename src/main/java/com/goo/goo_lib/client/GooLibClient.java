@@ -1,12 +1,12 @@
 package com.goo.goo_lib.client;
 
 import com.goo.goo_lib.client.registry.GLRenderTypes;
-import com.goo.goo_lib.client.registry.PostEffectRegistry;
-import com.goo.goo_lib.client.render.MotionBlurPipeline;
-import com.goo.goo_lib.client.render.pipeline.EntityShaderPipeline;
+import com.goo.goo_lib.client.render.PostEffectRegistry;
 import com.goo.goo_lib.client.render.pipeline.GuiShaderPipeline;
+import com.goo.goo_lib.client.render.pipeline.MotionBlurPipeline;
+import com.goo.goo_lib.client.render.pipeline.ScreenPostEffectPipeline;
+import com.goo.goo_lib.client.render.pipeline.WorldShaderPipeline;
 import com.goo.goo_lib.common.GooLib;
-import com.goo.goo_lib.util.StyleEffectUtil;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
@@ -17,6 +17,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
@@ -39,29 +40,95 @@ public class GooLibClient {
 
             @Override
             public void flushBuffers() {
-                StyleEffectUtil.TEXT_EFFECT_BUFFER.endBatch();
+                GLRenderTypes.TEXT_EFFECT_BUFFER.endBatch();
             }
         });
-        PostEffectRegistry.registerPipeline(new EntityShaderPipeline() {
+
+        PostEffectRegistry.registerPipeline(new WorldShaderPipeline() {
             @Override
             public ResourceLocation getLocation() {
                 return GLRenderTypes.BLUR_SHADER_LOCATION;
             }
         });
-        PostEffectRegistry.registerPipeline(new EntityShaderPipeline() {
+
+        PostEffectRegistry.registerPipeline(new WorldShaderPipeline() {
+            @Override
+            public ResourceLocation getLocation() {
+                return GLRenderTypes.PIXELATE_SHADER_LOCATION;
+            }
+
+            @Override
+            public BlitMode getBlitMode() {
+                return BlitMode.DEPTH_AWARE_TRANSLUCENT;
+            }
+
+            @Override
+            public void onRenderStart(RenderTarget mainTarget, PostChain chain) {
+                // instead of within the render type pixelate output, which can be called multiply times per frame, call it once per frame
+                RenderTarget finalTarget = chain.getTempTarget("final"); // clearAndBindWrite already cleared it
+                if (finalTarget != null) finalTarget.copyDepthFrom(mainTarget); // opaque scene depth, once
+                mainTarget.bindWrite(false);
+            }
+
+//            @Override
+//            public void onBeforeProcess(PostEffectRegistry.PostEffect postEffect, RenderTarget mainTarget) {
+//                mainTarget.copyDepthFrom(postEffect.postChain.getTempTarget("final"));
+//            }
+
+            @Override
+            public boolean shouldBlitForStage(RenderLevelStageEvent.Stage stage) {
+                return stage == RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES;
+            }
+        });
+
+
+        PostEffectRegistry.registerPipeline(new ScreenPostEffectPipeline() {
+            @Override
+            public ResourceLocation getLocation() {
+                return GLRenderTypes.PIXELATE_SHADER_LOCATION;
+            }
+
+            @Override
+            public BlitMode getBlitMode() {
+                return BlitMode.TRANSLUCENT;
+            }
+        });
+        PostEffectRegistry.registerPipeline(new WorldShaderPipeline() {
             @Override
             public ResourceLocation getLocation() {
                 return GLRenderTypes.BLOOM_SHADER_LOCATION;
             }
 
             @Override
-            public void onBeforeEntities(RenderTarget mainTarget, PostChain chain) {
-                RenderTarget input = chain.getTempTarget("input");
-                input.clear(Minecraft.ON_OSX);
-                mainTarget.bindWrite(false);
+            public boolean shouldBlitForStage(RenderLevelStageEvent.Stage stage) {
+                return stage == RenderLevelStageEvent.Stage.AFTER_PARTICLES;
             }
 
+            @Override
+            public boolean shouldProcessForStage(RenderLevelStageEvent.Stage stage) {
+                return stage == RenderLevelStageEvent.Stage.AFTER_PARTICLES;
+            }
+
+            @Override
+            public void onBeforeProcess(PostEffectRegistry.PostEffect postEffect, RenderTarget mainTarget) {
+                RenderTarget input = postEffect.postChain.getTempTarget("input");
+                if (input != null) {
+                    // bind input buffer and flush accumulated bloom quads
+                    input.bindWrite(false);
+                    GLRenderTypes.BLOOM_BUFFER_SOURCE.endBatch();
+                    mainTarget.bindWrite(false);
+                }
+            }
+
+            @Override
+            public void onAfterBlit(PostEffectRegistry.PostEffect postEffect) {
+                RenderTarget input = postEffect.postChain.getTempTarget("input");
+                if (input != null) {
+                    input.clear(Minecraft.ON_OSX);
+                }
+            }
         });
+
         PostEffectRegistry.registerPipeline(new MotionBlurPipeline());
     }
 }

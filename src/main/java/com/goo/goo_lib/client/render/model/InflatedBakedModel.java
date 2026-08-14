@@ -10,6 +10,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.model.BakedModelWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -19,6 +21,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+@OnlyIn(Dist.CLIENT)
 public class InflatedBakedModel extends BakedModelWrapper<BakedModel> {
     private final float texelSize;
     private final Map<ItemDisplayContext, Float> contextScales;

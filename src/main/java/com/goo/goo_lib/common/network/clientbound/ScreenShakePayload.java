@@ -1,18 +1,16 @@
-package com.goo.goo_lib.common.network;
+package com.goo.goo_lib.common.network.clientbound;
 
 import com.goo.goo_lib.common.GooLib;
 import com.goo.goo_lib.util.Easing;
 import com.goo.goo_lib.util.screenshake.ShakeInstance;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
-import java.util.Optional;
+import java.util.Objects;
 
 public record ScreenShakePayload(
         String identifier,
@@ -28,7 +26,8 @@ public record ScreenShakePayload(
         float maxPitch,
         float maxYaw,
         float maxRoll,
-        Optional<Vec3> sourcePos, // nullable
+        @Nullable
+        Vector3f sourcePos, // nullable
         double radius
 ) implements CustomPacketPayload {
 
@@ -41,15 +40,11 @@ public record ScreenShakePayload(
                 instance.motionBlur,
                 instance.maxX, instance.maxY,
                 instance.maxPitch, instance.maxYaw, instance.maxRoll,
-                Optional.ofNullable(instance.sourcePos), instance.radius
+                instance.sourcePos.toVector3f(), instance.radius
         );
     }
 
     public static final Type<ScreenShakePayload> TYPE = new Type<>(GooLib.loc("screen_shake"));
-    private static final StreamCodec<ByteBuf, Easing> EASING_CODEC =
-            ByteBufCodecs.idMapper(id -> Easing.values()[id], Easing::ordinal);
-    private static final StreamCodec<ByteBuf, Vec3> VEC3_CODEC =
-            ByteBufCodecs.VECTOR3F.map(vec -> new Vec3(vec.x, vec.y, vec.z), vec -> new Vector3f((float) vec.x, (float) vec.y, (float) vec.z));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ScreenShakePayload> STREAM_CODEC = StreamCodec.of(
             (buf, payload) -> {
@@ -58,15 +53,15 @@ public record ScreenShakePayload(
                 buf.writeVarInt(payload.durationTicks);
                 buf.writeVarInt(payload.fadeInTicks);
                 buf.writeVarInt(payload.fadeOutTicks);
-                EASING_CODEC.encode(buf, payload.fadeInCurve);
-                EASING_CODEC.encode(buf, payload.fadeOutCurve);
+                buf.writeEnum(payload.fadeInCurve);
+                buf.writeEnum(payload.fadeOutCurve);
                 buf.writeBoolean(payload.motionBlur);
                 buf.writeFloat(payload.maxX);
                 buf.writeFloat(payload.maxY);
                 buf.writeFloat(payload.maxPitch);
                 buf.writeFloat(payload.maxYaw);
                 buf.writeFloat(payload.maxRoll);
-                ByteBufCodecs.optional(VEC3_CODEC).encode(buf, payload.sourcePos);
+                buf.writeNullable(payload.sourcePos(), (buffer, pos) -> buffer.writeVector3f(Objects.requireNonNull(pos)));
                 buf.writeDouble(payload.radius);
             },
             buf -> new ScreenShakePayload(
@@ -75,15 +70,15 @@ public record ScreenShakePayload(
                     buf.readVarInt(),
                     buf.readVarInt(),
                     buf.readVarInt(),
-                    EASING_CODEC.decode(buf),
-                    EASING_CODEC.decode(buf),
+                    buf.readEnum(Easing.class),
+                    buf.readEnum(Easing.class),
                     buf.readBoolean(),
                     buf.readFloat(),
                     buf.readFloat(),
                     buf.readFloat(),
                     buf.readFloat(),
                     buf.readFloat(),
-                    ByteBufCodecs.optional(VEC3_CODEC).decode(buf),
+                    buf.readNullable((buffer) -> buffer.readVector3f()),
                     buf.readDouble()
             )
     );

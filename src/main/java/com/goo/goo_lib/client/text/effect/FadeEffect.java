@@ -4,6 +4,7 @@ import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Builder;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Style;
@@ -17,6 +18,7 @@ public class FadeEffect implements TextEffect<FadeEffect.Config> {
         return Config.CODEC;
     }
 
+    @Builder
     public record Config(float minAlpha, float frequency, float phase) {
         public static final MapCodec<FadeEffect.Config> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
                 Codec.FLOAT.optionalFieldOf("minAlpha", 0.3F).forGetter(FadeEffect.Config::minAlpha),

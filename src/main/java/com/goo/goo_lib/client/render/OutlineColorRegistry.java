@@ -3,6 +3,8 @@ package com.goo.goo_lib.client.render;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.registries.DeferredItem;
 
 import java.util.Map;
@@ -12,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Registry for outline color providers.
  * Register an item and a color function, the system handles smooth lerping.
  */
+@OnlyIn(Dist.CLIENT)
 public class OutlineColorRegistry {
 
     private static final Map<Item, OutlineColorProvider> PROVIDERS = new ConcurrentHashMap<>();

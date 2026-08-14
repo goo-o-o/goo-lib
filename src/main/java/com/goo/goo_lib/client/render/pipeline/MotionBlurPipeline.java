@@ -1,16 +1,18 @@
-package com.goo.goo_lib.client.render;
+package com.goo.goo_lib.client.render.pipeline;
 
 import com.goo.goo_lib.client.registry.GLRenderTypes;
-import com.goo.goo_lib.client.render.pipeline.ScreenPostEffectPipeline;
 import com.goo.goo_lib.util.MotionBlurUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+@OnlyIn(Dist.CLIENT)
 public class MotionBlurPipeline extends ScreenPostEffectPipeline {
 
     private final Matrix4f currentViewProj = new Matrix4f();

@@ -14,6 +14,13 @@ public class ItemOutlineUtil {
 
     private static LivingEntity pendingLivingEntity = null;
 
+    /**
+     * Originally meant for outlines only, but is useful for people who want to do custom item rendering based on entity status
+     */
+    public static LivingEntity getEntityHoldingItem() {
+        return pendingLivingEntity;
+    }
+
     public static void push(LivingEntity livingEntity) {
         pendingLivingEntity = livingEntity;
     }

@@ -80,6 +80,9 @@ public class GLAttributeEvents {
         if (!event.has(EntityType.PLAYER, GLAttributes.XP_GAIN)) {
             event.add(EntityType.PLAYER, GLAttributes.XP_GAIN);
         }
+        if (!event.has(EntityType.PLAYER, GLAttributes.ELYTRA_ACCELERATION_MODIFIER)) {
+            event.add(EntityType.PLAYER, GLAttributes.ELYTRA_ACCELERATION_MODIFIER);
+        }
 
 
     }

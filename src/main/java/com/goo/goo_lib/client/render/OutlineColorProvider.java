@@ -2,6 +2,8 @@ package com.goo.goo_lib.client.render;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -9,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
  * Return the desired color each tick, the system handles smooth interpolation.
  */
 @FunctionalInterface
+@OnlyIn(Dist.CLIENT)
 public interface OutlineColorProvider {
     
     /**

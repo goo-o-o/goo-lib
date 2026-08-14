@@ -24,12 +24,24 @@ public class GlyphVertexData {
     public GlyphVertexData copy() {
         Vector3f[] clonedPositions = new Vector3f[4];
         for (int i = 0; i < 4; i++) {
-            // brand new vector
             clonedPositions[i] = new Vector3f(this.positions[i]);
         }
-        return new GlyphVertexData(clonedPositions);
-    }
 
+        GlyphVertexData copy = new GlyphVertexData(clonedPositions);
+
+        // Clone per-corner colors too, or the copy silently defaults to black
+        for (int i = 0; i < 4; i++) {
+            copy.setCornerColor(i,
+                    this.reds[i],
+                    this.greens[i],
+                    this.blues[i],
+                    this.alphas[i]
+            );
+            // adjust getter names to whatever GlyphVertexData actually exposes
+        }
+
+        return copy;
+    }
 
     public void setAlphas(float a) {
         for (int i = 0; i < 4; i++)

@@ -1,8 +1,19 @@
 package com.goo.goo_lib.util;
 
+import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Unique;
 
 public class MathUtil {
+    public static int gcd(int a, int b) {
+        if (b == 0) {
+            return a;
+        } else {
+            return gcd(b, a % b);
+        }
+    }
+
+
     @Unique
     public static float toFloat(int hbits) {
 

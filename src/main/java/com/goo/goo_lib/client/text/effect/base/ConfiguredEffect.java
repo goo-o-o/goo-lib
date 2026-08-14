@@ -66,9 +66,6 @@ public class ConfiguredEffect<C> {
         this.effect.addExtraRenderPasses(passes, vertexData, matrix, style, index, font, pX, pY, codePoint, this.config);
     }
 
-    public float getOverlayAlpha() {
-        return this.effect instanceof OverlayEffect overlay ? overlay.getOverlayAlpha(this.config) : 1.0f;
-    }
 
     public C getConfig() {
         return config;

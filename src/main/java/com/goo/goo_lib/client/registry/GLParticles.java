@@ -2,6 +2,8 @@ package com.goo.goo_lib.client.registry;
 
 import com.goo.goo_lib.client.particle.ComponentParticleOption;
 import com.goo.goo_lib.client.particle.ComponentParticleType;
+import com.goo.goo_lib.client.particle.TrailParticleOption;
+import com.goo.goo_lib.client.particle.TrailParticleType;
 import com.goo.goo_lib.common.GooLib;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -13,5 +15,8 @@ public class GLParticles {
 
     public static final DeferredHolder<ParticleType<?>, ParticleType<ComponentParticleOption>> COMPONENT_PARTICLE = PARTICLE_TYPES.register(
             "component_particle", () -> new ComponentParticleType(true)
+    );
+    public static final DeferredHolder<ParticleType<?>, ParticleType<TrailParticleOption>> TRAIL_PARTICLE = PARTICLE_TYPES.register(
+            "trail_particle", () -> new TrailParticleType(true)
     );
 }

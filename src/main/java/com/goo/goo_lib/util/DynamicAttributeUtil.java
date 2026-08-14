@@ -1,4 +1,4 @@
-package com.goo.goo_lib.common;
+package com.goo.goo_lib.util;
 
 import com.goo.goo_lib.common.attribute.IDynamicAttributeModifier;
 import net.minecraft.world.entity.LivingEntity;
@@ -6,7 +6,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DynamicAttributeAPI {
+public class DynamicAttributeUtil {
     private static final List<IDynamicAttributeModifier> MODIFIERS = new ArrayList<>();
     
     private static final ThreadLocal<Boolean> IS_PROCESSING = ThreadLocal.withInitial(() -> false);

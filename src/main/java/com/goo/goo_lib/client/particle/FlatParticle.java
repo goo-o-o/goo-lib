@@ -5,10 +5,13 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
 import net.minecraft.util.Mth;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 
+@OnlyIn(Dist.CLIENT)
 public class FlatParticle extends TextureSheetParticle {
     protected float oQuadSize;
     protected float pitch, oPitch;

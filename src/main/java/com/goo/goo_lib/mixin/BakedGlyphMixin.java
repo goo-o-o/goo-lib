@@ -1,12 +1,12 @@
 package com.goo.goo_lib.mixin;
 
+import com.goo.goo_lib.client.registry.GLRenderTypes;
 import com.goo.goo_lib.client.render.GlyphVertexConsumer;
 import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.goo.goo_lib.client.text.StyleEffectContainer;
 import com.goo.goo_lib.client.text.effect.TextEffect;
 import com.goo.goo_lib.client.text.effect.base.ConfiguredEffect;
 import com.goo.goo_lib.util.RenderUtil;
-import com.goo.goo_lib.util.StyleEffectUtil;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.glyphs.BakedGlyph;
@@ -112,15 +112,17 @@ public abstract class BakedGlyphMixin {
                 this.u0, this.v0, this.u1, this.v1, pPackedLight);
 
         // overlay
-        List<StyleEffectUtil.OverlayPass> passes = StyleEffectUtil.OVERLAY_PASSES.get();
-        if (passes != null) {
-            for (StyleEffectUtil.OverlayPass pass : passes) {
+        if (proxy.overlayPasses != null) {
+            for (GlyphVertexConsumer.OverlayPass pass : proxy.overlayPasses) {
                 RenderType overlayType = pass.renderType();
-                VertexConsumer overlayBuffer = StyleEffectUtil.TEXT_EFFECT_BUFFER.getBuffer(overlayType);
-                RenderUtil.drawGlyphQuad(overlayBuffer, renderMatrix, vertexData,
+                VertexConsumer overlayBuffer = GLRenderTypes.TEXT_EFFECT_BUFFER.getBuffer(overlayType);
+
+                GlyphVertexData overlayData = vertexData.copy();
+                pass.effect().modifyOverlayVertexData(overlayData, pass.config());
+
+                RenderUtil.drawGlyphQuad(overlayBuffer, renderMatrix, overlayData,
                         this.u0, this.v0, this.u1, this.v1, pPackedLight);
             }
-            StyleEffectUtil.OVERLAY_PASSES.remove();
         }
     }
 }

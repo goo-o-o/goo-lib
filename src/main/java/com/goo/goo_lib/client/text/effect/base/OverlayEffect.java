@@ -1,5 +1,6 @@
 package com.goo.goo_lib.client.text.effect.base;
 
+import com.goo.goo_lib.client.text.GlyphVertexData;
 import net.minecraft.client.renderer.RenderType;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,12 +10,13 @@ public interface OverlayEffect<C> {
     RenderType getOverlayRenderType(RenderType sourceType, C config);
 
     /**
-     * Alpha multiplier applied to the overlay quad. Override to use config-driven values.
-     * The config passed is this effect's own config object.
+     * Called once per overlay pass, on a COPY of the main quad's vertex data,
+     * immediately before the overlay quad is drawn. Mutate freely — this never
+     * affects the main glyph quad or other overlay passes.
+     * Default is a no-op so existing overlay effects that don't need this
+     * don't have to implement it.
      */
-    default float getOverlayAlpha(C config) {
-        return 1.0f;
-    }
+    default void modifyOverlayVertexData(GlyphVertexData overlayData, C config) {}
 
     /** Replaces the original render particleType instead of adding a pass. */
     default RenderType modifyOriginalRenderType(RenderType sourceType, C config) {

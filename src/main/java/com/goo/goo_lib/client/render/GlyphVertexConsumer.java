@@ -1,20 +1,30 @@
 package com.goo.goo_lib.client.render;
 
+import com.goo.goo_lib.client.text.effect.base.OverlayEffect;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Style;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.model.pipeline.VertexConsumerWrapper;
+
+import java.util.List;
 
 
 /**
  * Allows us to easily store contextual glyph data
  */
+@OnlyIn(Dist.CLIENT)
 public class GlyphVertexConsumer extends VertexConsumerWrapper {
     public float dimFactor;
     public boolean dropShadow;
     public int index, codePoint;
     public Style style;
     public Font font;
+    public List<OverlayPass> overlayPasses;
+    public record OverlayPass(RenderType renderType, OverlayEffect<Object> effect, Object config) {}
+
 
     public GlyphVertexConsumer(VertexConsumer parent, Style style, int index, Font font, float dimFactor, boolean dropShadow, int codePoint) {
         super(parent);

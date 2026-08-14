@@ -1,6 +1,6 @@
 package com.goo.goo_lib.mixin;
 
-import com.goo.goo_lib.common.DynamicAttributeAPI;
+import com.goo.goo_lib.util.DynamicAttributeUtil;
 import com.goo.goo_lib.common.attribute.IDynamicAttribute;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -21,7 +21,7 @@ public abstract class AttributeInstanceMixin implements IDynamicAttribute {
             double original = cir.getReturnValue();
 
             // Pass calculation to the clean API wrapper
-            double modified = DynamicAttributeAPI.entryPoint(
+            double modified = DynamicAttributeUtil.entryPoint(
                     this.gl$owner,
                     (AttributeInstance) (Object) this,
                     original
