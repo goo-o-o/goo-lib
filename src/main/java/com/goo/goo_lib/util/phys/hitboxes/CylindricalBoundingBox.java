@@ -1,7 +1,14 @@
 package com.goo.goo_lib.util.phys.hitboxes;
 
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -9,6 +16,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.List;
@@ -31,7 +39,7 @@ public class CylindricalBoundingBox extends BaseBoundingBox {
     public AABB getAABB() {
         if (center == null) return new AABB(0, 0, 0, 0, 0, 0);
 
-        // Use the LARGER of inner and outer radius
+        // always use the larger radius for robustness
         float outer = Math.max(radius, innerRadius);
 
         // World X extent: contributions from local X, Y (height), and Z basis vectors
@@ -50,83 +58,88 @@ public class CylindricalBoundingBox extends BaseBoundingBox {
         Vec3 halfExtent = new Vec3(ex, ey, ez);
         return new AABB(center.subtract(halfExtent), center.add(halfExtent));
     }
+
     @Override
     public BaseBoundingBox copy() {
         CylindricalBoundingBox copy = new CylindricalBoundingBox(center, height, radius, innerRadius);
         copy.rotation.set(this.rotation);
         return copy;
     }
+
     @OnlyIn(Dist.CLIENT)
     @Override
     public void render(PoseStack poseStack) {
-//        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-//        Vec3 camPos = camera.getPosition();
-//
-//        poseStack.pushPose();
-//        poseStack.translate(center.x - camPos.x, center.y - camPos.y, center.z - camPos.z);
-//
-//        // Apply rotation
-//        Matrix4f pose = poseStack.last().pose();
-//        Matrix3f normal = poseStack.last().normal();
-//        Matrix4f rot4 = new Matrix4f();
-//        rotation.get(rot4);
-//        pose.mul(rot4);
-//        normal.mul(rotation);
-//
-//        int segments = 32;
-//        float step = (float) (Math.PI * 2 / segments);
-//
-//        // === THICK LINES SETUP (exact same as Better Combat) ===
-//        RenderSystem.enableDepthTest();
-//        RenderSystem.disableCull();
-//        RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
-//        RenderSystem.lineWidth(4F);
-//
-//        Tesselator tesselator = Tesselator.getInstance();
-//        BufferBuilder buffer = tesselator.getBuilder();
-//        buffer.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-//
-//        float r = 0.0f, g = 1.0f, b = 0.4f, alpha = 1.0f;
-//
-//        // Draw top & bottom circles
-//        for (float y : new float[]{halfHeight, -halfHeight}) {
-//            for (float rad : new float[]{radius, innerRadius > 0.02f ? innerRadius : 0f}) {
-//                if (rad < 0.02f) continue;
-//
-//                for (int i = 0; i < segments; i++) {
-//                    float a1 = i * step;
-//                    float a2 = (i + 1) * step;
-//                    float x1 = (float)Math.cos(a1) * rad;
-//                    float z1 = (float)Math.sin(a1) * rad;
-//                    float x2 = (float)Math.cos(a2) * rad;
-//                    float z2 = (float)Math.sin(a2) * rad;
-//
-//                    buffer.vertex(pose, x1, y, z1).color(r,g,b,alpha).normal(normal, 0,1,0).endVertex();
-//                    buffer.vertex(pose, x2, y, z2).color(r,g,b,alpha).normal(normal, 0,1,0).endVertex();
-//                }
-//            }
-//        }
-//
-//        // Vertical pillars (8 of them)
-//        for (int i = 0; i < 8; i++) {
-//            float a = i * (step * 4);
-//            float x = (float)Math.cos(a);
-//            float z = (float)Math.sin(a);
-//
-//            for (float rad : new float[]{radius, innerRadius > 0.02f ? innerRadius : 0f}) {
-//                if (rad < 0.02f) continue;
-//
-//                float vx = x * rad;
-//                float vz = z * rad;
-//
-//                buffer.vertex(pose, vx, -halfHeight, vz).color(r,g,b,a).normal(normal, 0,1,0).endVertex();
-//                buffer.vertex(pose, vx,  halfHeight, vz).color(r,g,b,a).normal(normal, 0,1,0).endVertex();
-//            }
-//        }
-//
-//        RenderSystem.lineWidth(1);
-//        tesselator.end();
-//        poseStack.popPose();
+        if (height == 0) return;
+
+        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        Vec3 camPos = camera.getPosition();
+
+        poseStack.pushPose();
+        poseStack.translate(center.x - camPos.x, center.y - camPos.y, center.z - camPos.z);
+
+        // apply rotation
+        PoseStack.Pose currentPose = poseStack.last();
+        Matrix4f pose = currentPose.pose();
+        Matrix3f normal = currentPose.normal();
+        Matrix4f rot4 = new Matrix4f();
+        rotation.get(rot4);
+        pose.mul(rot4);
+        normal.mul(rotation);
+
+        int segments = 32;
+        float step = (float) (Math.PI * 2 / segments);
+
+        // setup our shader
+        RenderSystem.enableDepthTest();
+        RenderSystem.disableCull();
+        RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
+        RenderSystem.lineWidth(4F);
+
+        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        VertexConsumer buffer = bufferSource.getBuffer(RenderType.lines());
+
+        float r = 0.0f, g = 1.0f, b = 0.4f, alpha = 1.0f;
+
+        // draw top and bottom circles
+        for (float y : new float[]{halfHeight, -halfHeight}) {
+            for (float rad : new float[]{radius, innerRadius > 0.02f ? innerRadius : 0f}) {
+                if (rad < 0.02f) continue;
+
+                for (int i = 0; i < segments; i++) {
+                    float a1 = i * step;
+                    float a2 = (i + 1) * step;
+                    float x1 = (float) Math.cos(a1) * rad;
+                    float z1 = (float) Math.sin(a1) * rad;
+                    float x2 = (float) Math.cos(a2) * rad;
+                    float z2 = (float) Math.sin(a2) * rad;
+
+                    buffer.addVertex(pose, x1, y, z1).setColor(r, g, b, alpha).setNormal(currentPose, 0, 1, 0);
+                    buffer.addVertex(pose, x2, y, z2).setColor(r, g, b, alpha).setNormal(currentPose, 0, 1, 0);
+                }
+            }
+        }
+
+        // vertical lines
+        for (int i = 0; i < 8; i++) {
+            float a = i * (step * 4);
+            float x = (float) Math.cos(a);
+            float z = (float) Math.sin(a);
+
+            for (float rad : new float[]{radius, innerRadius > 0.02f ? innerRadius : 0f}) {
+                if (rad < 0.02f) continue;
+
+                float vx = x * rad;
+                float vz = z * rad;
+
+                buffer.addVertex(pose, vx, -halfHeight, vz).setColor(r, g, b, a).setNormal(currentPose, 0, 1, 0);
+                buffer.addVertex(pose, vx, halfHeight, vz).setColor(r, g, b, a).setNormal(currentPose, 0, 1, 0);
+            }
+        }
+
+        bufferSource.endBatch(RenderType.lines());
+        RenderSystem.lineWidth(1);
+
+        poseStack.popPose();
     }
 
     @Override
@@ -141,9 +154,9 @@ public class CylindricalBoundingBox extends BaseBoundingBox {
             for (int y = 0; y < 2; y++)
                 for (int z = 0; z < 2; z++)
                     corners[i++] = new Vector3f(
-                            (float)(x==0 ? aabb.minX : aabb.maxX) - (float)center.x,
-                            (float)(y==0 ? aabb.minY : aabb.maxY) - (float)center.y,
-                            (float)(z==0 ? aabb.minZ : aabb.maxZ) - (float)center.z
+                            (float) (x == 0 ? aabb.minX : aabb.maxX) - (float) center.x,
+                            (float) (y == 0 ? aabb.minY : aabb.maxY) - (float) center.y,
+                            (float) (z == 0 ? aabb.minZ : aabb.maxZ) - (float) center.z
                     );
 
         float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE;
@@ -152,18 +165,21 @@ public class CylindricalBoundingBox extends BaseBoundingBox {
 
         for (Vector3f c : corners) {
             invRot.transform(c);
-            minX = Math.min(minX, c.x); maxX = Math.max(maxX, c.x);
-            minY = Math.min(minY, c.y); maxY = Math.max(maxY, c.y);
-            minZ = Math.min(minZ, c.z); maxZ = Math.max(maxZ, c.z);
+            minX = Math.min(minX, c.x);
+            maxX = Math.max(maxX, c.x);
+            minY = Math.min(minY, c.y);
+            maxY = Math.max(maxY, c.y);
+            minZ = Math.min(minZ, c.z);
+            maxZ = Math.max(maxZ, c.z);
         }
 
-        // 1. Height (local Y)
+        // height check
         if (maxY < -halfHeight || minY > halfHeight) return false;
 
-        // 2. Closest distance from axis to local AABB (in XZ plane)
+        // do not change this to clamp()!!!
         float closestX = Math.max(minX, Math.min(maxX, 0f));
         float closestZ = Math.max(minZ, Math.min(maxZ, 0f));
-        float closestDistSq = closestX*closestX + closestZ*closestZ;
+        float closestDistSq = closestX * closestX + closestZ * closestZ;
 
         // Outside the outer radius → no hit
         if (closestDistSq > radius * radius) return false;
@@ -172,10 +188,10 @@ public class CylindricalBoundingBox extends BaseBoundingBox {
         if (innerRadius > 0.01f) {
             // Squared distance to the farthest corner of the local AABB from the axis
             float farthestDistSq = 0f;
-            farthestDistSq = Math.max(farthestDistSq, minX*minX + minZ*minZ);
-            farthestDistSq = Math.max(farthestDistSq, minX*minX + maxZ*maxZ);
-            farthestDistSq = Math.max(farthestDistSq, maxX*maxX + minZ*minZ);
-            farthestDistSq = Math.max(farthestDistSq, maxX*maxX + maxZ*maxZ);
+            farthestDistSq = Math.max(farthestDistSq, minX * minX + minZ * minZ);
+            farthestDistSq = Math.max(farthestDistSq, minX * minX + maxZ * maxZ);
+            farthestDistSq = Math.max(farthestDistSq, maxX * maxX + minZ * minZ);
+            farthestDistSq = Math.max(farthestDistSq, maxX * maxX + maxZ * maxZ);
 
             return !(farthestDistSq < innerRadius * innerRadius); // entirely inside hole
         }

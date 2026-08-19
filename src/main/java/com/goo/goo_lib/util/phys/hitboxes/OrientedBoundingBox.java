@@ -1,7 +1,13 @@
 package com.goo.goo_lib.util.phys.hitboxes;
 
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -9,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.List;
@@ -87,71 +94,64 @@ public class OrientedBoundingBox extends BaseBoundingBox {
 
     @OnlyIn(Dist.CLIENT)
     public static void renderGradientSides(OrientedBoundingBox box, PoseStack poseStack, int bottomCol, int topCol) {
-//        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-//        Vec3 camPos = camera.getPosition();
-//
-//        poseStack.pushPose();
-//        poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
-//
-//        // Use Translucent shader for gradients/alpha
-//        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-//        RenderSystem.enableBlend();
-//        RenderSystem.defaultBlendFunc();
-//        RenderSystem.disableCull(); // See inside and outside of the box
-//
-//        Tesselator tessellator = Tesselator.getInstance();
-//        BufferBuilder buffer = tessellator.getBuilder();
-//
-//        // Start drawing QUADS
-//        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-//
-//        Matrix4f mat = poseStack.last().pose();
-//
-//        // 1. Get our local axes from your existing method
-//        Vec3 hx = box.getLocalAxis(0).scale(box.halfExtents.x);
-//        Vec3 hy = box.getLocalAxis(1).scale(box.halfExtents.y); // Vertical/Height axis
-//        Vec3 hz = box.getLocalAxis(2).scale(box.halfExtents.z);
-//
-//        // 2. Define the 4 corners of the BOTTOM face (Center minus hy)
-//        Vec3 bottomCenter = box.center.subtract(hy);
-//        Vec3 b1 = bottomCenter.add(hx).add(hz);
-//        Vec3 b2 = bottomCenter.subtract(hx).add(hz);
-//        Vec3 b3 = bottomCenter.subtract(hx).subtract(hz);
-//        Vec3 b4 = bottomCenter.add(hx).subtract(hz);
-//
-//        // 3. Define the 4 corners of the TOP face (Center plus hy)
-//        Vec3 topCenter = box.center.add(hy);
-//        Vec3 t1 = topCenter.add(hx).add(hz);
-//        Vec3 t2 = topCenter.subtract(hx).add(hz);
-//        Vec3 t3 = topCenter.subtract(hx).subtract(hz);
-//        Vec3 t4 = topCenter.add(hx).subtract(hz);
-//
-//        // 4. Draw the 4 side faces
-//        box.drawSide(buffer, mat, b1, b2, t2, t1, bottomCol, topCol); // Side A
-//        box.drawSide(buffer, mat, b2, b3, t3, t2, bottomCol, topCol); // Side B
-//        box.drawSide(buffer, mat, b3, b4, t4, t3, bottomCol, topCol); // Side C
-//        box.drawSide(buffer, mat, b4, b1, t1, t4, bottomCol, topCol); // Side D
-//
-//        tessellator.end();
-//
-//        RenderSystem.enableCull();
-//        RenderSystem.disableBlend();
-//        poseStack.popPose();
+        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        Vec3 camPos = camera.getPosition();
+
+        poseStack.pushPose();
+        poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableCull();
+
+        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        VertexConsumer buffer = bufferSource.getBuffer(RenderType.lines());
+
+        Matrix4f mat = poseStack.last().pose();
+
+        // 2. local axes calculation
+        Vec3 hx = box.getLocalAxis(0).scale(box.halfExtents.x);
+        Vec3 hy = box.getLocalAxis(1).scale(box.halfExtents.y);
+        Vec3 hz = box.getLocalAxis(2).scale(box.halfExtents.z);
+
+        // 3. bottom face corners
+        Vec3 bottomCenter = box.center.subtract(hy);
+        Vec3 b1 = bottomCenter.add(hx).add(hz);
+        Vec3 b2 = bottomCenter.subtract(hx).add(hz);
+        Vec3 b3 = bottomCenter.subtract(hx).subtract(hz);
+        Vec3 b4 = bottomCenter.add(hx).subtract(hz);
+
+        // 4. top face corners
+        Vec3 topCenter = box.center.add(hy);
+        Vec3 t1 = topCenter.add(hx).add(hz);
+        Vec3 t2 = topCenter.subtract(hx).add(hz);
+        Vec3 t3 = topCenter.subtract(hx).subtract(hz);
+        Vec3 t4 = topCenter.add(hx).subtract(hz);
+
+        // 5. draw sides using VertexConsumer
+        box.drawSide(buffer, mat, b1, b2, t2, t1, bottomCol, topCol);
+        box.drawSide(buffer, mat, b2, b3, t3, t2, bottomCol, topCol);
+        box.drawSide(buffer, mat, b3, b4, t4, t3, bottomCol, topCol);
+        box.drawSide(buffer, mat, b4, b1, t1, t4, bottomCol, topCol);
+
+        // 6. flush batch to GPU
+        bufferSource.endBatch(RenderType.lines());
+
+        RenderSystem.enableCull();
+        RenderSystem.disableBlend();
+        poseStack.popPose();
     }
 
-//    private void drawSide(BufferBuilder buffer, Matrix4f mat, Vec3 bL, Vec3 bR, Vec3 tR, Vec3 tL, int bCol, int tCol) {
-//        vertex(buffer, mat, bL, bCol);
-//        vertex(buffer, mat, bR, bCol);
-//        vertex(buffer, mat, tR, tCol);
-//        vertex(buffer, mat, tL, tCol);
-//    }
-//
-//    private void vertex(BufferBuilder buffer, Matrix4f mat, Vec3 pos, int c) {
-//        // This matches DefaultVertexFormat.POSITION_COLOR exactly
-//        buffer.vertex(mat, (float)pos.x, (float)pos.y, (float)pos.z)
-//                .color(c) // BufferBuilder has a simplified .color(int) helper
-//                .endVertex();
-//    }
+    private void drawSide(VertexConsumer buffer, Matrix4f mat, Vec3 bL, Vec3 bR, Vec3 tR, Vec3 tL, int bCol, int tCol) {
+        vertex(buffer, mat, bL, bCol);
+        vertex(buffer, mat, bR, bCol);
+        vertex(buffer, mat, tR, tCol);
+        vertex(buffer, mat, tL, tCol);
+    }
+
+    private void vertex(VertexConsumer buffer, Matrix4f mat, Vec3 pos, int c) {
+        buffer.addVertex(mat, (float)pos.x, (float)pos.y, (float)pos.z).setColor(c);
+    }
 
 
     @OnlyIn(Dist.CLIENT)

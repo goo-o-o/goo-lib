@@ -1,6 +1,6 @@
 package com.goo.goo_lib.util.phys.hitboxes;
 
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
 
@@ -8,9 +8,9 @@ import java.util.List;
 
 public class HitboxUtils {
 
-    public static Vec3 getShoulderPosition(Player player) {
-        double shoulderHeight = (double) player.getBbHeight() * 0.15 * (double) player.getScale();
-        return player.getEyePosition().add(0F, -shoulderHeight, 0F);
+    public static Vec3 getShoulderPosition(LivingEntity livingEntity) {
+        double shoulderHeight = (double) livingEntity.getBbHeight() * 0.15 * (double) livingEntity.getScale();
+        return livingEntity.getEyePosition().add(0F, -shoulderHeight, 0F);
     }
 
     public static class RayResult<T> {

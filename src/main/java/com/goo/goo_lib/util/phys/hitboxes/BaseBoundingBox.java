@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -12,6 +13,9 @@ import org.joml.Vector3f;
 
 import java.util.List;
 
+/**
+ * Base class for my bounding boxes
+ */
 @Getter
 public abstract class BaseBoundingBox {
 
@@ -56,25 +60,25 @@ public abstract class BaseBoundingBox {
         return this;
     }
 
-    public BaseBoundingBox inWorld(Player player, Vec3 localOffset) {
+    public BaseBoundingBox inWorld(LivingEntity livingEntity, Vec3 localOffset) {
         return this.copy()
-                .translateWorld(HitboxUtils.getShoulderPosition(player))
-                .rotateWorld(HitboxUtils.fromAngle(player.getXRot(), player.getYRot(), 0))
-                .translateLocal(localOffset.add(0,0, player.getBbWidth() / 2));
+                .translateWorld(HitboxUtils.getShoulderPosition(livingEntity))
+                .rotateWorld(HitboxUtils.fromAngle(livingEntity.getXRot(), livingEntity.getYRot(), 0))
+                .translateLocal(localOffset.add(0,0, livingEntity.getBbWidth() / 2));
     }
 
-    public BaseBoundingBox inWorld(Player player, Vec3 localOffset, float xRot, float yRot) {
+    public BaseBoundingBox inWorld(LivingEntity livingEntity, Vec3 localOffset, float xRot, float yRot) {
         return this.copy()
-                .translateWorld(HitboxUtils.getShoulderPosition(player))
+                .translateWorld(HitboxUtils.getShoulderPosition(livingEntity))
                 .rotateWorld(HitboxUtils.fromAngle(xRot, yRot, 0))
-                .translateLocal(localOffset.add(0,0, player.getBbWidth() / 2));
+                .translateLocal(localOffset.add(0,0, livingEntity.getBbWidth() / 2));
     }
 
-    public BaseBoundingBox inWorld(Player player, Vec3 origin, Vec3 localOffset) {
+    public BaseBoundingBox inWorld(LivingEntity livingEntity, Vec3 origin, Vec3 localOffset) {
         return this.copy()
                 .translateWorld(origin)
-                .rotateWorld(HitboxUtils.fromAngle(player.getXRot(), player.getYRot(), 0))
-                .translateLocal(localOffset.add(0,0, player.getBbWidth() / 2));
+                .rotateWorld(HitboxUtils.fromAngle(livingEntity.getXRot(), livingEntity.getYRot(), 0))
+                .translateLocal(localOffset.add(0,0, livingEntity.getBbWidth() / 2));
     }
 
     public <T extends Entity> List<T> filter(List<T> entities) {
