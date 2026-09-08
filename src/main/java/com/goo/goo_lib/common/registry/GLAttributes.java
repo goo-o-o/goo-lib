@@ -60,6 +60,11 @@ public class GLAttributes {
             1, 0, 10000
     ));
 
+    public static final Holder<Attribute> INVULNERABILITY_TICKS = ATTRIBUTES.register("invulnerability_ticks", () -> new RangedAttribute(
+            prepend("invulnerability_ticks"),
+            20, 0, 10000
+    ));
+
     public static final Holder<Attribute> HEALING_RECEIVED = ATTRIBUTES.register("healing_received", () -> new PercentageAttribute(
             prepend("healing_received"),
             1, 0, 10000
@@ -76,7 +81,17 @@ public class GLAttributes {
             1, 0, 10000
     ).setSyncable(true).setSentiment(Attribute.Sentiment.NEUTRAL));
 
-  
+    /**
+     * Entity visibility percentage from hostile mobs.
+     */
+    public static final Holder<Attribute> STEALTH = ATTRIBUTES.register("stealth", () ->
+            new PercentageAttribute(prepend("stealth"), 0, 0, 1)
+                    .setSyncable(true));
+
+    public static final Holder<Attribute> DODGE_CHANCE = ATTRIBUTES.register("dodge_chance", () ->
+            new PercentageAttribute(prepend("dodge_chance"), 0, 0, 1)
+                    .setSyncable(true));
+
 
     public static final Holder<Attribute> BOAT_SPEED_MODIFIER = ATTRIBUTES.register("boat_speed_modifier", () -> new PercentageAttribute(
             prepend("boat_speed_modifier"),

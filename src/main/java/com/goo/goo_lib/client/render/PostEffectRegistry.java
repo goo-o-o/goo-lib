@@ -1,10 +1,10 @@
 package com.goo.goo_lib.client.render;
 
 import com.goo.goo_lib.client.registry.GLRenderTypes;
-import com.goo.goo_lib.client.render.pipeline.WorldShaderPipeline;
 import com.goo.goo_lib.client.render.pipeline.GuiShaderPipeline;
 import com.goo.goo_lib.client.render.pipeline.ScreenPostEffectPipeline;
 import com.goo.goo_lib.client.render.pipeline.ShaderPipeline;
+import com.goo.goo_lib.client.render.pipeline.WorldShaderPipeline;
 import com.goo.goo_lib.common.GooLib;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -25,7 +25,6 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
@@ -52,7 +51,6 @@ import java.util.function.Consumer;
  * {@link ScreenPostEffectPipeline} — driven by this class (AFTER_LEVEL event):<br>
  * onBeforeProcess() → processAndBlitWith()<br>
  */
-@EventBusSubscriber(modid = GooLib.MOD_ID, value = Dist.CLIENT)
 @OnlyIn(Dist.CLIENT)
 public class PostEffectRegistry {
 

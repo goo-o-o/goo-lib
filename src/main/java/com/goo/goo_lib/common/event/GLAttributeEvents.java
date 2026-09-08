@@ -1,6 +1,7 @@
 package com.goo.goo_lib.common.event;
 
 import com.goo.goo_lib.common.GooLib;
+import com.goo.goo_lib.common.event.custom.LivingDodgeEvent;
 import com.goo.goo_lib.common.registry.GLAttachments;
 import com.goo.goo_lib.common.registry.GLAttributes;
 import net.minecraft.world.damagesource.DamageSource;
@@ -15,13 +16,11 @@ import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.TridentItem;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.GrindstoneEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
-import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
-import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
-import net.neoforged.neoforge.event.entity.living.LivingHealEvent;
+import net.neoforged.neoforge.event.entity.living.*;
 import net.neoforged.neoforge.event.entity.player.CriticalHitEvent;
 import net.neoforged.neoforge.event.level.BlockDropsEvent;
 
@@ -68,6 +67,15 @@ public class GLAttributeEvents {
             }
             if (!event.has(type, GLAttributes.WALL_CLIMBING)) {
                 event.add(type, GLAttributes.WALL_CLIMBING);
+            }
+            if (!event.has(type, GLAttributes.STEALTH)) {
+                event.add(type, GLAttributes.STEALTH);
+            }
+            if (!event.has(type, GLAttributes.DODGE_CHANCE)) {
+                event.add(type, GLAttributes.DODGE_CHANCE);
+            }
+            if (!event.has(type, GLAttributes.INVULNERABILITY_TICKS)) {
+                event.add(type, GLAttributes.INVULNERABILITY_TICKS);
             }
         }
 
@@ -191,5 +199,40 @@ public class GLAttributeEvents {
             event.setXp((int) (event.getXp() * event.getPlayer().getAttributeValue(GLAttributes.XP_GAIN)));
     }
 
+    @SubscribeEvent
+    public static void onLivingVisibility(LivingEvent.LivingVisibilityEvent event) {
+        event.modifyVisibility(1 - event.getEntity().getAttributeValue(GLAttributes.STEALTH));
+    }
 
+    @SubscribeEvent
+    public static void onLivingIncomingDamage(LivingIncomingDamageEvent event) {
+        LivingEntity dodger = event.getEntity();
+        double baseDodgeChance = dodger.getAttributeValue(GLAttributes.DODGE_CHANCE);
+        double initialRoll = dodger.getRandom().nextDouble();
+
+        LivingDodgeEvent.Pre preEvent = new LivingDodgeEvent.Pre(
+                dodger, initialRoll, baseDodgeChance, event.getSource(), event.getContainer()
+        );
+        NeoForge.EVENT_BUS.post(preEvent);
+
+        // if pre canceled, immediately return without canceling damage
+        if (preEvent.isCanceled()) {
+            return;
+        }
+
+        // roll
+        if (preEvent.getRoll() <= preEvent.getDodgeChance()) {
+            // cancel damage
+            event.setCanceled(true);
+
+            // post event to notify of successful dodge
+            LivingDodgeEvent.Post postEvent = new LivingDodgeEvent.Post(
+                    dodger, preEvent.getRoll(), preEvent.getDodgeChance(), event.getSource(), event.getContainer()
+            );
+            NeoForge.EVENT_BUS.post(postEvent);
+        }
+
+        event.getContainer().setPostAttackInvulnerabilityTicks((int) dodger.getAttributeValue(GLAttributes.INVULNERABILITY_TICKS));
+
+    }
 }

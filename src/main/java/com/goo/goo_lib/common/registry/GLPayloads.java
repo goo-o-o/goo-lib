@@ -7,11 +7,14 @@ import com.goo.goo_lib.common.network.clientbound.DisplayItemActivationPayload;
 import com.goo.goo_lib.common.network.clientbound.ResetEnvironmentColorPayload;
 import com.goo.goo_lib.common.network.clientbound.ScreenShakePayload;
 import com.goo.goo_lib.common.network.clientbound.SetEnvironmentColorPayload;
+import com.goo.goo_lib.common.network.serverbound.DamageEntityPayload;
 import com.goo.goo_lib.common.network.serverbound.SetItemStackInSlotPayload;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+
+import java.util.Set;
 
 @EventBusSubscriber(modid = GooLib.MOD_ID)
 public class GLPayloads {
@@ -43,6 +46,11 @@ public class GLPayloads {
         registrar.playToServer(
                 SetItemStackInSlotPayload.TYPE,
                 SetItemStackInSlotPayload.STREAM_CODEC,
+                ServerPayloadHandler::handle
+        );
+        registrar.playToServer(
+                DamageEntityPayload.TYPE,
+                DamageEntityPayload.STREAM_CODEC,
                 ServerPayloadHandler::handle
         );
     }

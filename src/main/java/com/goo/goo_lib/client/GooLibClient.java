@@ -20,6 +20,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.common.NeoForge;
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
 
@@ -28,10 +29,16 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 public class GooLibClient {
     public GooLibClient(ModContainer container) {
         container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+        if (container.getEventBus() != null) {
+            // register manually so the neoforge mod class loaders do not inspect them on worker threads during startup
+            container.getEventBus().addListener(GLRenderTypes::registerShaders);
+            NeoForge.EVENT_BUS.addListener(PostEffectRegistry::onRenderLevelForScreen);
+        }
     }
 
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
+
         PostEffectRegistry.registerPipeline(new GuiShaderPipeline() {
             @Override
             public ResourceLocation getLocation() {

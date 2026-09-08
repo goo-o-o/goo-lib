@@ -66,6 +66,11 @@ public class FlatParticle extends TextureSheetParticle {
     }
 
     @Override
+    public float getQuadSize(float scaleFactor) {
+        return Mth.lerp(scaleFactor, oQuadSize, quadSize);
+    }
+
+    @Override
     protected void renderRotatedQuad(VertexConsumer buffer, Quaternionf quaternion, float x, float y, float z, float partialTicks) {
         float f = this.getQuadSize(partialTicks);
         float f1 = this.getU0();

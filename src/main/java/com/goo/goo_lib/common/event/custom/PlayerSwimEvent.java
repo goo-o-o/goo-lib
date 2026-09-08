@@ -1,6 +1,8 @@
 package com.goo.goo_lib.common.event.custom;
 
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -19,6 +21,8 @@ import net.neoforged.neoforge.fluids.FluidType;
  * </ul>
  * Only called for Water, other fluids can use {@link net.minecraft.world.entity.LivingEntity#canSwimInFluidType(FluidType)}
  */
+@Setter
+@Getter
 public class PlayerSwimEvent extends PlayerEvent {
 
     private EventResult result = EventResult.PASS;
@@ -27,14 +31,6 @@ public class PlayerSwimEvent extends PlayerEvent {
         super(player);
     }
 
-
-    public EventResult getResult() {
-        return result;
-    }
-
-    public void setResult(EventResult result) {
-        this.result = result;
-    }
 
     /**
      * Convenience method for Posting of the events
