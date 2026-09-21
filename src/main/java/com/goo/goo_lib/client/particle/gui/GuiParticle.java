@@ -2,10 +2,9 @@ package com.goo.goo_lib.client.particle.gui;
 
 import com.goo.goo_lib.util.RenderUtil;
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Minecraft;
+import com.mojang.math.Axis;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.renderer.RenderType;
@@ -28,10 +27,14 @@ public class GuiParticle {
     public float prevR, prevG, prevB, prevAlpha;
     public boolean additive = false;
 
-    private ParticleType<?> particleType;
-    private ResourceLocation texture;
-    private int solidColor = -1;
-    private boolean useColor = false;
+    public float pitch, prevPitch, vPitch, aPitch;
+    public float yaw, prevYaw, vYaw, aYaw;
+    public float roll, prevRoll, vRoll, aRoll;
+
+    protected ParticleType<?> particleType;
+    protected ResourceLocation texture;
+    protected int solidColor = -1;
+    protected boolean useColor = false;
 
     private GuiParticle(float x, float y, int z, float vx, float vy, int lifetime, float scale,
                         float r, float g, float b, float alpha) {
@@ -81,6 +84,27 @@ public class GuiParticle {
         return this;
     }
 
+    public GuiParticle withRotation(float pitch, float yaw, float roll) {
+        this.pitch = this.prevPitch = pitch;
+        this.yaw = this.prevYaw = yaw;
+        this.roll = this.prevRoll = roll;
+        return this;
+    }
+
+    public GuiParticle withAngularVelocity(float vPitch, float vYaw, float vRoll) {
+        this.vPitch = vPitch;
+        this.vYaw = vYaw;
+        this.vRoll = vRoll;
+        return this;
+    }
+
+    public GuiParticle withAngularAcceleration(float aPitch, float aYaw, float aRoll) {
+        this.aPitch = aPitch;
+        this.aYaw = aYaw;
+        this.aRoll = aRoll;
+        return this;
+    }
+
     public GuiParticle additiveRendering() {
         this.additive = true;
         return this;
@@ -95,14 +119,26 @@ public class GuiParticle {
         prevG = g;
         prevB = b;
         prevAlpha = alpha;
+
+        prevPitch = pitch;
+        prevYaw = yaw;
+        prevRoll = roll;
+
         vx += ax;
         vy += ay;
         x += vx;
         y += vy;
+
+        vPitch += aPitch;
+        vYaw += aYaw;
+        vRoll += aRoll;
+        pitch += vPitch;
+        yaw += vYaw;
+        roll += vRoll;
+
         age++;
         return age < lifetime;
     }
-
     public void render(GuiGraphics graphics, float partialTick) {
         if (alpha <= 0f || scale <= 0f) return;
 
@@ -114,24 +150,27 @@ public class GuiParticle {
         float drawX = Mth.lerp(partialTick, prevX, x);
         float drawY = Mth.lerp(partialTick, prevY, y);
 
-        Window window = Minecraft.getInstance().getWindow();
-        float guiScale = (float) window.getGuiScale();
-
-        // Calculate float pixel positions
-        float pixelX = drawX * guiScale;
-        float pixelY = drawY * guiScale;
-        float pixelSize = drawScale * guiScale;
-
-        // Use floats directly - no snapping
-        float halfSize = pixelSize / 2f;
-        float left = pixelX - halfSize;
-        float top = pixelY - halfSize;
-        float right = pixelX + halfSize;
-        float bottom = pixelY + halfSize;
-
         PoseStack pose = graphics.pose();
         pose.pushPose();
-        pose.scale(1f / guiScale, 1f / guiScale, 1f);
+
+        // 1. Move origin to the particle's center position in GUI space
+        pose.translate(drawX, drawY, (float) z);
+
+        // 2. Interpolate and apply 3D rotations around center pivot (0, 0, 0)
+        float drawPitch = Mth.lerp(partialTick, prevPitch, pitch);
+        float drawYaw = Mth.lerp(partialTick, prevYaw, yaw);
+        float drawRoll = Mth.lerp(partialTick, prevRoll, roll);
+
+        if (drawPitch != 0.0F) pose.mulPose(Axis.XP.rotationDegrees(drawPitch));
+        if (drawYaw != 0.0F)   pose.mulPose(Axis.YP.rotationDegrees(drawYaw));
+        if (drawRoll != 0.0F)  pose.mulPose(Axis.ZP.rotationDegrees(drawRoll));
+
+        // 3. Define quad boundaries centered at (0, 0)
+        float halfSize = drawScale / 2f;
+        float left = -halfSize;
+        float top = -halfSize;
+        float right = halfSize;
+        float bottom = halfSize;
 
         RenderSystem.enableBlend();
         if (additive) {
@@ -140,25 +179,25 @@ public class GuiParticle {
             RenderSystem.defaultBlendFunc();
         }
 
+        // 4. Render relative to (0, 0) at local z = 0 (z translation handled by pose.translate above)
         if (useColor) {
             int colour = solidColor != -1 ? solidColor : FastColor.ARGB32.colorFromFloat(drawAlpha, drawR, drawG, drawB);
-            RenderUtil.fillWithUv(RenderType.gui(), graphics, left, top, right, bottom, z, colour);
+            RenderUtil.fillWithUv(RenderType.gui(), graphics, left, top, right, bottom, 0, colour);
         } else if (particleType != null) {
             SpriteSet sprites = GuiParticleSystem.getSprites(particleType);
             if (sprites != null) {
                 TextureAtlasSprite sprite = sprites.get(age, lifetime);
-                RenderUtil.blit(graphics, left, top, (float) z, pixelSize, pixelSize, sprite, drawR, drawG, drawB, drawAlpha);
+                RenderUtil.blit(graphics, left, top, 0F, drawScale, drawScale, sprite, drawR, drawG, drawB, drawAlpha);
             }
         } else if (texture != null) {
             RenderSystem.setShaderColor(drawR, drawG, drawB, drawAlpha);
-            RenderUtil.blitSprite(graphics, texture, left, top, (float) z, pixelSize, pixelSize);
+            RenderUtil.blitSprite(graphics, texture, left, top, 0F, drawScale, drawScale);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         }
 
         RenderSystem.disableBlend();
         pose.popPose();
     }
-
 
     public boolean isDead() {
         return age >= lifetime;

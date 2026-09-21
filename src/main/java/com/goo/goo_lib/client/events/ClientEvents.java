@@ -5,9 +5,10 @@ import com.goo.goo_lib.client.particle.TrailParticle;
 import com.goo.goo_lib.client.particle.gui.GuiParticleSystem;
 import com.goo.goo_lib.client.registry.GLParticles;
 import com.goo.goo_lib.client.registry.GLRenderTypes;
-import com.goo.goo_lib.client.render.PostEffectRegistry;
 import com.goo.goo_lib.client.render.OutlineColorRegistry;
+import com.goo.goo_lib.client.render.PostEffectRegistry;
 import com.goo.goo_lib.common.GooLib;
+import com.goo.goo_lib.util.EffectMarkupParser;
 import com.goo.goo_lib.util.screenshake.ScreenShakeUtil;
 import com.goo.goo_lib.util.screenshake.ShakeInstance;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -64,7 +65,7 @@ public class ClientEvents {
             protected void apply(@NotNull Void object, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
                 GLRenderTypes.clearCaches();
                 OutlineColorRegistry.clear();
-
+                EffectMarkupParser.clearCache();
                 PostEffectRegistry.onInitializeOutline(resourceManager);
             }
         });

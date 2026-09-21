@@ -8,6 +8,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Builder;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FastColor;
 import org.joml.Matrix4f;
@@ -20,14 +21,26 @@ public class ColorGradientEffect implements TextEffect<ColorGradientEffect.Confi
     public record Config(List<Integer> colors, float spread, float waveSpeed) {
         public static final MapCodec<Config> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
                 GLCodecs.UNIVERSAL_COLOR_CODEC.listOf().fieldOf("colors").forGetter(Config::colors),
-                Codec.FLOAT.fieldOf("spread").forGetter(Config::spread),
-                Codec.FLOAT.fieldOf("wave_speed").forGetter(Config::waveSpeed)
+                Codec.FLOAT.optionalFieldOf("spread", 100.0F).forGetter(Config::spread),
+                Codec.FLOAT.optionalFieldOf("wave_speed", 1.0F).forGetter(Config::waveSpeed)
         ).apply(inst, Config::new));
     }
 
 
     @Override
-    public void applyEffect(GlyphVertexData vertexData, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, float dimFactor, int codePoint, Config config) {
+    public void applyEffect(BakedGlyph glyph, GlyphVertexData vertexData, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, float dimFactor, int codePoint, Config config) {
+        if (config.colors().size() == 1) {
+            // slight performance
+            int color = config.colors().getFirst();
+
+            applyRGBA(vertexData, 0, color, dimFactor);
+            applyRGBA(vertexData, 1, color, dimFactor);
+            applyRGBA(vertexData, 2, color, dimFactor);
+            applyRGBA(vertexData, 3, color, dimFactor);
+
+            return;
+        }
+
         float leftWorldX = pX + vertexData.positions[0].x;
         float rightWorldX = pX + vertexData.positions[2].x;
 

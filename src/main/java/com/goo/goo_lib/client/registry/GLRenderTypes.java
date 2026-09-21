@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static net.minecraft.client.renderer.RenderStateShard.*;
@@ -163,6 +164,10 @@ public class GLRenderTypes {
 
     public static RenderType getFlame(RenderType source) {
         return createTextRenderType("flame", source, InternalShaders.TEXT_FLAME::getInstance);
+    }
+
+    public static RenderType getGlitch(RenderType source) {
+        return createTextRenderType("glitch", source, InternalShaders.TEXT_GLITCH::getInstance);
     }
 
     public static RenderType getAbyssal(RenderType source) {
@@ -445,10 +450,11 @@ public class GLRenderTypes {
     }
 
     // ── Encapsulated Internal Shader State Holder ─────────────────────────
-
+private static final ResourceLocation MAGMA = ResourceLocation.withDefaultNamespace("textures/block/magma.png");
     public enum InternalShaders {
         TEXT_BLOOM(DefaultVertexFormat.POSITION_TEX_COLOR),
-        TEXT_FLAME(DefaultVertexFormat.POSITION_TEX_COLOR),
+        TEXT_FLAME(DefaultVertexFormat.POSITION_TEX_COLOR, shader -> RenderSystem.setShaderTexture(1, MAGMA)),
+        TEXT_GLITCH(DefaultVertexFormat.POSITION_TEX_COLOR),
         TEXT_ABYSSAL(DefaultVertexFormat.POSITION_TEX_COLOR),
         TEXT_SMOOTH_WAVE(DefaultVertexFormat.POSITION_TEX_COLOR),
         TEXT_ACID(DefaultVertexFormat.POSITION_TEX_COLOR),
@@ -465,17 +471,24 @@ public class GLRenderTypes {
 
         @Getter
         private final VertexFormat format;
+        private final Consumer<ShaderInstance> onGetCallback;
         @Setter
         private ShaderInstance instance;
 
         InternalShaders(VertexFormat format) {
+            this(format, instance -> {
+            });
+        }
+
+        InternalShaders(VertexFormat format, Consumer<ShaderInstance> onGetCallback) {
             this.format = format;
+            this.onGetCallback = onGetCallback;
         }
 
         @Nullable
         public ShaderInstance getInstance() {
+            this.onGetCallback.accept(this.instance);
             return this.instance;
         }
-
     }
 }

@@ -10,6 +10,7 @@ import lombok.Builder;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.FontSet;
+import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
@@ -34,7 +35,7 @@ public class PendulumEffect implements TextEffect<PendulumEffect.Config> {
 
 
     @Override
-    public Matrix4f applyMatrixTransforms(GlyphVertexData data, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, int codePoint, Config config) {
+    public Matrix4f applyMatrixTransforms(BakedGlyph glyph, GlyphVertexData data, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, int codePoint, Config config) {
         if (config.angle() == 0) return matrix;
 
         double phase = (Mth.TWO_PI * config.frequency() * (Util.getMillis() * 0.001)) - (index * 0.5);

@@ -3,6 +3,7 @@ package com.goo.goo_lib.client.text.effect;
 import com.goo.goo_lib.client.text.GlyphVertexData;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.network.chat.Style;
 import org.joml.Matrix4f;
 
@@ -12,6 +13,7 @@ public interface TextEffect<C> {
     record RenderPass(Matrix4f matrix, int color) {}
 
     /**
+     * @param glyph
      * @param vertexData The geometric layout data of the character glyph.
      * @param matrix
      * @param style
@@ -24,15 +26,15 @@ public interface TextEffect<C> {
      * @param codePoint
      * @param config     The custom type-safe configuration object containing parameters.
      */
-    default void applyEffect(GlyphVertexData vertexData, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, float dimFactor, int codePoint, C config) {
+    default void applyEffect(BakedGlyph glyph, GlyphVertexData vertexData, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, float dimFactor, int codePoint, C config) {
 
     }
 
-    default Matrix4f applyMatrixTransforms(GlyphVertexData data, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, int codepoint, C config) {
+    default Matrix4f applyMatrixTransforms(BakedGlyph glyph, GlyphVertexData data, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, int codepoint, C config) {
         return matrix;
     }
 
-    default void addExtraRenderPasses(List<RenderPass> passes, GlyphVertexData vertexData, Matrix4f matrix, Style style, int index, Font font, float pX, float pY, int codepoint, C config) {
+    default void addExtraRenderPasses(BakedGlyph glyph, List<RenderPass> passes, GlyphVertexData vertexData, Matrix4f matrix, Style style, int index, Font font, float pX, float pY, int codepoint, C config) {
     }
 
     MapCodec<C> codec();

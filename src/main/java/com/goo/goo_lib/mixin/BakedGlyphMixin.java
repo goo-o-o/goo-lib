@@ -84,15 +84,15 @@ public abstract class BakedGlyphMixin {
         for (int i = 0; i < 4; i++) vertexData.setCornerColor(i, pRed, pGreen, pBlue, pAlpha);
 
         Matrix4f renderMatrix = pMatrix;
-
+        BakedGlyph glyph = ((BakedGlyph) (Object) this);
         for (ConfiguredEffect<?> effect : activeEffects) {
-            effect.run(vertexData, pMatrix, currentStyle, isShadow, index, font, pX, pY, dimFactor, codePoint);
-            renderMatrix = effect.applyMatrixTransforms(vertexData, renderMatrix, currentStyle, isShadow, index, font, pX, pY, codePoint);
+            effect.run(glyph, vertexData, pMatrix, currentStyle, isShadow, index, font, pX, pY, dimFactor, codePoint);
+            renderMatrix = effect.applyMatrixTransforms(glyph, vertexData, renderMatrix, currentStyle, isShadow, index, font, pX, pY, codePoint);
         }
 
         List<TextEffect.RenderPass> backgroundPasses = new ArrayList<>();
         for (ConfiguredEffect<?> effect : activeEffects) {
-            effect.collectExtraPasses(backgroundPasses, vertexData, renderMatrix, currentStyle, index, font, pX, pY, codePoint);
+            effect.collectExtraPasses(glyph, backgroundPasses, vertexData, renderMatrix, currentStyle, index, font, pX, pY, codePoint);
         }
 
         for (TextEffect.RenderPass pass : backgroundPasses) {

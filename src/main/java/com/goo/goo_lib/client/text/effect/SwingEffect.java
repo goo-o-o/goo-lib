@@ -9,6 +9,7 @@ import lombok.Builder;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.FontSet;
+import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
@@ -31,7 +32,7 @@ public class SwingEffect implements TextEffect<SwingEffect.Config> {
 
 
     @Override
-    public Matrix4f applyMatrixTransforms(GlyphVertexData data, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, int codePoint, Config config) {
+    public Matrix4f applyMatrixTransforms(BakedGlyph glyph, GlyphVertexData data, Matrix4f matrix, Style style, boolean dropShadow, int index, Font font, float pX, float pY, int codePoint, Config config) {
         float w = Mth.TWO_PI * config.frequency() * (Util.getMillis() * 0.001f) + index * config.phase();
 
         float angleRad = (float) ((Math.sin(w) * config.angle()) * Mth.DEG_TO_RAD);

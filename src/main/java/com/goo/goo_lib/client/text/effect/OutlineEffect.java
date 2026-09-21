@@ -7,6 +7,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Builder;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.font.glyphs.BakedGlyph;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FastColor;
 import org.joml.Matrix4f;
@@ -25,7 +26,7 @@ public class OutlineEffect implements TextEffect<OutlineEffect.Config> {
     }
 
     @Override
-    public void addExtraRenderPasses(List<RenderPass> passes, GlyphVertexData vertexData, Matrix4f matrix, Style style, int index, Font font, float pX, float pY, int codePoint, Config config) {
+    public void addExtraRenderPasses(BakedGlyph glyph, List<RenderPass> passes, GlyphVertexData vertexData, Matrix4f matrix, Style style, int index, Font font, float pX, float pY, int codePoint, Config config) {
         float width = config.thickness();
 
         float[][] offsets = {

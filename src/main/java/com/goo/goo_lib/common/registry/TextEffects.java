@@ -34,9 +34,11 @@ public class TextEffects {
     public static final Supplier<EffectType<SwingEffect.Config>> SWING_TYPE = register("swing", SwingEffect::new);
     public static final Supplier<EffectType<OutlineEffect.Config>> OUTLINE_TYPE = register("outline", OutlineEffect::new);
     public static final Supplier<EffectType<ShakeEffect.Config>> SHAKE_TYPE = register("shake", ShakeEffect::new);
+    public static final Supplier<EffectType<DripEffect.Config>> DRIP_TYPE = TextEffects.register("drip", DripEffect::new);
     public static final Supplier<EffectType<Float>> BLOOM_TYPE = register("bloom", BloomEffect::new);
     public static final Supplier<EffectType<Unit>> FOGGY_TYPE = register("foggy", FoggyEffect::new);
-    public static final Supplier<EffectType<Unit>> FIRE_TYPE = register("fire", FireEffect::new);
+    public static final Supplier<EffectType<FireEffect.Config>> FIRE_TYPE = register("fire", FireEffect::new);
+    public static final Supplier<EffectType<Unit>> GLITCH_TYPE = register("glitch", GlitchEffect::new);
 
     public static void init(IEventBus modBus) {
         // NeoForge passes a consumer configuring a builder; we catch it and do nothing to keep default settings

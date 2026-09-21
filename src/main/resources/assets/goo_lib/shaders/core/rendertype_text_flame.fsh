@@ -1,65 +1,123 @@
 #version 150
 
 uniform sampler2D Sampler0;
+uniform sampler2D Sampler1;
 uniform vec4 ColorModulator;
 uniform float GameTime;
+uniform vec2 ScreenSize;
 
 in vec4 vertexColor;
-in vec2 texCoord;
+in vec2 texCoord0;
+in vec2 quadUv;    // local quad UV
+in vec2 screenPos;
 
 out vec4 fragColor;
 
+#define TIME (GameTime * 1000.0)
+
+// 3d noise functions...
+float hash3D(vec3 p) {
+    p = fract(p * vec3(443.8975, 397.2973, 491.1871));
+    p += dot(p, p.yxz + 19.19);
+    return fract((p.x + p.y) * p.z);
+}
+
+float noise3D(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+
+    return mix(
+            mix(mix(hash3D(i + vec3(0, 0, 0)), hash3D(i + vec3(1, 0, 0)), f.x),
+                    mix(hash3D(i + vec3(0, 1, 0)), hash3D(i + vec3(1, 1, 0)), f.x), f.y),
+            mix(mix(hash3D(i + vec3(0, 0, 1)), hash3D(i + vec3(1, 0, 1)), f.x),
+                    mix(hash3D(i + vec3(0, 1, 1)), hash3D(i + vec3(1, 1, 1)), f.x), f.y),
+            f.z
+    );
+}
+
+vec2 curlNoise(vec2 p, float t) {
+    float eps = 0.1;
+    float n1 = noise3D(vec3(p.x, p.y + eps, t));
+    float n2 = noise3D(vec3(p.x, p.y - eps, t));
+    float n3 = noise3D(vec3(p.x + eps, p.y, t));
+    float n4 = noise3D(vec3(p.x - eps, p.y, t));
+
+    return vec2(n1 - n2, -(n3 - n4));
+}
+
+float renderCurlEmbers(vec2 sp, vec2 localUv) {
+    float localY = 1.0 - localUv.y;
+    float verticalEnvelope = sin(localY * 3.14159265);
+    verticalEnvelope = smoothstep(0.0, 1.0, verticalEnvelope);
+
+    if (verticalEnvelope <= 0.001) return 0.0;
+
+    float screenAspect = ScreenSize.x / ScreenSize.y;
+    vec2 pos = vec2(sp.x * screenAspect, sp.y);
+
+    vec2 flow = curlNoise(pos * 6.0, TIME);
+    vec2 particleUv = pos * 25.0 + flow * 1.5 - vec2(0.0, TIME * 3.0);
+
+    vec2 id = floor(particleUv);
+    vec2 gUv = fract(particleUv) - 0.5;
+
+    float rnd = hash3D(vec3(id, 17.0));
+
+    vec2 pPos = vec2(sin(rnd * 6.28 + TIME) * 0.2, cos(rnd * 3.14 + TIME) * 0.2);
+    float dist = length(gUv - pPos);
+
+    float maxSparkRadius = 0.12 + rnd * 0.08;
+    float currentSparkRadius = maxSparkRadius * verticalEnvelope;
+
+    float spark = smoothstep(currentSparkRadius, 0.0, dist);
+    float flicker = 0.7 + 0.3 * sin(TIME * 5.0 + rnd * 100.0);
+
+    return spark * flicker * verticalEnvelope;
+}
+
 void main() {
-    // 1. Fetch base text texture sample
-    vec4 textSample = texture(Sampler0, texCoord);
+    // 1. Calculate heat distortion offset for font sampling
+    // localUv.y (1.0 - quadUv.y) ensures heat refraction increases higher up the text
+    float heatHeightMask = (1.0 - quadUv.y);
+    vec2 distortionFlow = curlNoise(screenPos * 8.0, TIME * 0.5);
+    vec2 distortedFontUV = texCoord0 + distortionFlow * 0.0015 * heatHeightMask;
 
-    // Early discard on empty space to keep font atlas boundaries perfectly clean
-    if (textSample.a < 0.01) {
+    // Sample Sampler0 with heat-distorted UV coordinates
+    vec4 fontColor = texture(Sampler0, distortedFontUV);
+
+    // Dynamic threshold expansion: lowering min bound inflates the glyph mask outwards
+    float shimmerWave = sin(TIME * 4.0 + quadUv.x * 3.0 + quadUv.y * 3.0) * 0.03;
+    float minEdge = clamp(0.01 + shimmerWave, 0.001, 0.05);
+
+    // Inflated soft font alpha mask
+    float softFontAlpha = smoothstep(minEdge, 0.45, fontColor.a);
+    float emberIntensity = renderCurlEmbers(screenPos, quadUv);
+
+    if (softFontAlpha < 0.01 && emberIntensity < 0.01) {
         discard;
     }
 
-    // 2. Local UV Scaling for fire pattern size
-    vec2 fireUV = texCoord * 75.0;
+    float screenAspect = ScreenSize.x / ScreenSize.y;
+    vec2 aspectCorrectedScreenPos = vec2(screenPos.x * screenAspect, screenPos.y);
 
-    // 3. Procedural Flame Math (Trigonometric Noise Network)
-    float timeSource = GameTime * 2000.0;
-    vec2 movement = vec2(0.0, timeSource);
-    vec2 coord = fireUV + movement;
+    // 2. Add heat distortion flow to magma texture UVs
+    float textureScale = 8.0;
+    vec2 scrollSpeed = vec2(0.001, -0.001);
 
-    float waveFactor = 0.0;
-    waveFactor += sin(coord.x * 1.5 + timeSource) * cos(coord.y * 1.0 - timeSource);
-    waveFactor += sin(coord.x * 3.1 + timeSource * 1.5) * cos(coord.y * 2.3 + timeSource * 0.7) * 0.5;
-    waveFactor += sin(coord.x * 6.2 - timeSource * 2.0) * 0.25;
+    vec2 magmaUV = aspectCorrectedScreenPos * textureScale;
+    magmaUV += TIME * scrollSpeed;
+    magmaUV += distortionFlow * 0.15; // distort magma fill
+    magmaUV = fract(magmaUV);
 
-    // Normalize wave factor to a positive 0.0 -> 1.0 range
-    float fireIntensity = clamp((waveFactor + 1.0) * 0.5, 0.0, 1.0);
+    vec4 magmaColor = texture(Sampler1, magmaUV);
+    vec3 tint = length(vertexColor.rgb) < 0.01 ? vec3(1.0) : vertexColor.rgb;
 
-    // 4. EXTRACT ORIGINAL BRIGHTNESS (LUMINANCE)
-    // Uses standard digital video coefficients to calculate accurate human-perceived brightness
-    float originalBrightness = dot(vertexColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    vec3 moltenText = magmaColor.rgb * tint * 1.5;
 
-    // Smooth and clamp the brightness multiplier so it doesn't clip to absolute zero or overflow
-    float brightnessMultiplier = clamp(originalBrightness, 0.15, 1.0);
+    vec3 finalColor = mix(tint, moltenText, softFontAlpha);
+    float finalAlpha = max(softFontAlpha, emberIntensity);
 
-    // 5. Base Color Palette Gradients
-    vec3 innerCoreColor = vec3(1.0, 0.65, 0.0);  // Bright Flame Orange
-    vec3 outerEdgeColor = vec3(0.9, 0.15, 0.0);  // Deep Crimson Embers
-
-    // Blend the fire colors together based on noise weight
-    vec3 activeFireRGB = mix(outerEdgeColor, innerCoreColor, smoothstep(0.3, 0.8, fireIntensity));
-
-    // 6. APPLY BRIGHTNESS TINT
-    // Multiply the final fire RGB by our extracted brightness multiplier.
-    // For the main text, this multiplies by ~1.0 (no change).
-    // For the shadow, this multiplies by ~0.25, making the fire significantly darker!
-    vec3 finalRGB = activeFireRGB * brightnessMultiplier;
-
-    // 7. Compute Masked Alpha Boundaries
-    float finalAlpha = textSample.a * fireIntensity * vertexColor.a;
-
-    fragColor = vec4(finalRGB, finalAlpha) * ColorModulator;
-
-    if (fragColor.a < 0.05) {
-        discard;
-    }
+    vec4 colMod = ColorModulator.a < 0.01 ? vec4(ColorModulator.rgb, 1.0) : ColorModulator;
+    fragColor = vec4(finalColor, finalAlpha) * colMod;
 }

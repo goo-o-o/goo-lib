@@ -50,7 +50,6 @@ public abstract class StringRenderOutputMixin {
 
         RenderType finalRenderType = renderType;
 
-
         List<ConfiguredEffect<?>> activeEffects = ((StyleEffectContainer) style).gl$getEffects();
         if (activeEffects == null || activeEffects.isEmpty()) return bufferSource.getBuffer(renderType);
 
