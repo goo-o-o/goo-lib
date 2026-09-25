@@ -79,8 +79,18 @@ public class GLAttributeEvents {
             }
         }
 
+
+        if (!event.has(EntityType.PLAYER, GLAttributes.FISHING_BOBBER_COUNT)) {
+            event.add(EntityType.PLAYER, GLAttributes.FISHING_BOBBER_COUNT);
+        }
+        if (!event.has(EntityType.PLAYER, GLAttributes.FISHING_LUCK)) {
+            event.add(EntityType.PLAYER, GLAttributes.FISHING_LUCK);
+        }
         if (!event.has(EntityType.PLAYER, GLAttributes.VILLAGER_REPUTATION)) {
             event.add(EntityType.PLAYER, GLAttributes.VILLAGER_REPUTATION);
+        }
+        if (!event.has(EntityType.PLAYER, GLAttributes.RIGHT_CLICK_DELAY)) {
+            event.add(EntityType.PLAYER, GLAttributes.RIGHT_CLICK_DELAY);
         }
         if (!event.has(EntityType.PLAYER, GLAttributes.CRITICAL_DAMAGE)) {
             event.add(EntityType.PLAYER, GLAttributes.CRITICAL_DAMAGE);

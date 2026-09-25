@@ -96,11 +96,15 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onPostRenderGui(RenderGuiEvent.Post event) {
         if (Minecraft.getInstance().screen != null) return;
+        GuiParticleSystem.getInstance().render(
+                event.getGuiGraphics(),
+                Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false));
+
+
         PostEffectRegistry.dispatchPostGui();
     }
 
-    // ── GUI pipelines: process + blit after screen renders ───────────────
-    // Handles inventory, tooltips, custom screens
+
     @SubscribeEvent
     public static void onPostRenderScreen(ScreenEvent.Render.Post event) {
         if (event.getScreen().isPauseScreen()) return;

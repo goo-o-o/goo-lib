@@ -17,10 +17,24 @@ public class GLAttributes {
         return "attributes." + GooLib.MOD_ID + "." + name;
     }
 
+    public static final Holder<Attribute> FISHING_LUCK = ATTRIBUTES.register("fishing_luck", () -> new RangedAttribute(
+            prepend("fishing_luck"),
+            0, -10000, 10000
+    ));
+    public static final Holder<Attribute> FISHING_BOBBER_COUNT = ATTRIBUTES.register("fishing_bobber_count", () -> new RangedAttribute(
+            prepend("fishing_bobber_count"),
+            1, 0, 10000
+    ));
+
     public static final Holder<Attribute> VILLAGER_REPUTATION = ATTRIBUTES.register("villager_reputation", () -> new RangedAttribute(
             prepend("villager_reputation"),
             0, -10000, 10000
     ));
+
+    public static final Holder<Attribute> RIGHT_CLICK_DELAY = ATTRIBUTES.register("right_click_delay", () -> new RangedAttribute(
+            prepend("right_click_delay"),
+            4, 0, 1024
+    ).setSyncable(true).setSentiment(Attribute.Sentiment.NEGATIVE));
 
     public static final Holder<Attribute> LAVA_MOVEMENT_EFFICIENCY = ATTRIBUTES.register("lava_movement_efficiency", () -> new PercentageAttribute(
             prepend("lava_movement_efficiency"),

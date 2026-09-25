@@ -1,7 +1,7 @@
 package com.goo.goo_lib.util;
 
 import com.goo.goo_lib.client.text.EffectType;
-import com.goo.goo_lib.client.text.effect.ShakeEffect;
+import com.goo.goo_lib.client.text.effect.JitterEffect;
 import com.goo.goo_lib.client.text.effect.base.ConfiguredEffect;
 import com.goo.goo_lib.common.GooLib;
 import com.goo.goo_lib.common.registry.TextEffects;
@@ -17,7 +17,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
-import net.minecraft.util.Mth;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -142,29 +141,62 @@ public final class EffectMarkupParser {
     }
 
     public static MutableComponent percent(float percent) {
-        float clamped = Mth.clamp(percent, 0, 100);
-        int color;
+        // color
+        int color = getGradientColor(percent);
 
-        if (clamped < 66F) {
-            float delta = clamped / 66F;
-            color = FastColor.ARGB32.lerp(delta, 0xFFE9B115, 0xFFFAD64A);
-        } else {
-            float delta = (clamped - 66F) / (100F - 66F);
-            color = FastColor.ARGB32.lerp(delta, 0xFFFAD64A, 0xFF99FFFD);
+        // format string
+        String value = (percent % 1 == 0) ? String.valueOf((int) percent) : String.format(Locale.ROOT, "%.1f", percent);
+
+        // bold when >= 75%
+        Style style = Style.EMPTY.withColor(color);
+        if (percent >= 75.0F) {
+            style = style.withBold(true);
         }
 
-        String value = percent % 1 == 0 ? String.valueOf((int) percent) : String.valueOf(percent);
-        Style style;
-        if (percent > 100) {
-            Supplier<ConfiguredEffect<ShakeEffect.Config>> SHAKE_SHR = () -> new ConfiguredEffect<>(
-                    TextEffects.SHAKE_TYPE.get(), new ShakeEffect(), ShakeEffect.Config.builder().speed(percent * 0.01F - 1).intensity(0.5F).build()
+        // jitter based on percent
+        if (percent > 100.0F) {
+            float excess = percent - 100.0F;
+            float intensity = Math.min(excess * 0.05F, 3.0F); // smooth intensity scaling
+            float speed = 1.0F + (excess * 0.02F);
+
+            Supplier<ConfiguredEffect<JitterEffect.Config>> jitter = () -> new ConfiguredEffect<>(
+                    TextEffects.JITTER_TYPE.get(),
+                    new JitterEffect(),
+                    JitterEffect.Config.builder().intensity(intensity).speed(speed).build()
             );
-            style = StyleEffectUtil.createStyleWithEffects(Style.EMPTY.withBold(true).withColor(color), List.of(SHAKE_SHR.get()));
-        } else {
-            style = Style.EMPTY.withBold(true).withColor(color);
+
+            style = StyleEffectUtil.createStyleWithEffects(style, List.of(jitter.get()));
         }
 
         return Component.literal(value + "%").withStyle(style);
+    }
+
+    private static int getGradientColor(float percent) {
+        // color stops for multi-stage gradient
+        int[] colors = {
+                0xFFFF4545, // 0%   - vibrant red
+                0xFFFF8C00, // 33%  - orange
+                0xFFFFD700, // 66%  - golden yellow
+                0xFF55FF55, // 100% - lime green
+                0xFF00FFFF, // 150% - cyan
+                0xFFFF55FF, // 200% - purple
+                0xFFFFAA00  // 300%+ gold
+        };
+
+        float[] stops = {0.0F, 33.0F, 66.0F, 100.0F, 150.0F, 200.0F, 300.0F};
+
+        if (percent <= stops[0]) return colors[0];
+        if (percent >= stops[stops.length - 1]) return colors[colors.length - 1];
+
+        // find active stop segment
+        for (int i = 0; i < stops.length - 1; i++) {
+            if (percent >= stops[i] && percent <= stops[i + 1]) {
+                float delta = (percent - stops[i]) / (stops[i + 1] - stops[i]);
+                return FastColor.ARGB32.lerp(delta, colors[i], colors[i + 1]);
+            }
+        }
+
+        return colors[colors.length - 1];
     }
 
     private static Style processSegment(MutableComponent root, String segment, Style currentStyle) {
