@@ -19,7 +19,7 @@ public class GLEffectEvents {
         MobEffectInstance instance = event.getEffectInstance();
 
         if (entity.level() instanceof ServerLevel serverLevel) {
-            if (instance.getEffect() instanceof ClientSyncableEffect) {
+            if (instance.getEffect().value() instanceof ClientSyncableEffect) {
                 serverLevel.getChunkSource().broadcastAndSend(
                         entity,
                         new ClientboundUpdateMobEffectPacket(entity.getId(), instance, true)
