@@ -3,16 +3,22 @@ package com.goo.goo_lib.mixin;
 import com.goo.goo_lib.common.attribute.IDynamicAttribute;
 import com.goo.goo_lib.common.event.custom.EventResult;
 import com.goo.goo_lib.common.event.custom.PlayerSwimEvent;
+import com.goo.goo_lib.common.registry.GLAttachments;
 import com.goo.goo_lib.common.registry.GLAttributes;
 import com.goo.goo_lib.util.phys.PhysicsUtils;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.core.Holder;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -201,5 +207,25 @@ public abstract class LivingEntityMixin extends Entity {
         return original;
     }
     //endregion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    @WrapOperation(
+            method = "hurt",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"
+            )
+    )
+    private void scaleArrowBaseKnockback(
+            LivingEntity instance, double strength, double x, double z, Operation<Void> original,
+            @Local(argsOnly = true) DamageSource source
+    ) {
+        if (source.getDirectEntity() instanceof AbstractArrow arrow) {
+            float multiplier = arrow.getData(GLAttachments.ARROW_KNOCKBACK);
+            strength *= multiplier;
+        }
+
+        original.call(instance, strength, x, z);
+    }
+
 
 }

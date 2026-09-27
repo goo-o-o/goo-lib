@@ -41,6 +41,9 @@ public class GLAttributeEvents {
             if (!event.has(type, GLAttributes.ARROW_GRAVITY)) {
                 event.add(type, GLAttributes.ARROW_GRAVITY);
             }
+            if (!event.has(type, GLAttributes.ARROW_KNOCKBACK)) {
+                event.add(type, GLAttributes.ARROW_KNOCKBACK);
+            }
             if (!event.has(type, GLAttributes.ARROW_DAMAGE)) {
                 event.add(type, GLAttributes.ARROW_DAMAGE);
             }
@@ -114,6 +117,10 @@ public class GLAttributeEvents {
                     if (owner.getAttributes().hasAttribute(GLAttributes.ARROW_GRAVITY)) {
                         projectile.setData(GLAttachments.ARROW_GRAVITY,
                                 (float) Objects.requireNonNull(owner.getAttribute(GLAttributes.ARROW_GRAVITY)).getValue());
+                    }
+                    if (owner.getAttributes().hasAttribute(GLAttributes.ARROW_KNOCKBACK)) {
+                        projectile.setData(GLAttachments.ARROW_KNOCKBACK,
+                                (float) Objects.requireNonNull(owner.getAttribute(GLAttributes.ARROW_KNOCKBACK)).getValue());
                     }
 
                     if (owner.getAttributes().hasAttribute(GLAttributes.ARROW_DAMAGE) && projectile instanceof AbstractArrow arrow) {

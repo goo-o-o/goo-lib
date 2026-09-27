@@ -5,14 +5,14 @@ import net.minecraft.util.Mth;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public class EmberParticle extends GuiParticle {
+public class EmberGuiParticle extends GuiParticle {
     private final float factor;
     private final boolean useCos;
-    private static final float START_R  = 1.0F,     START_G = 0.85F,    START_B = 0.2F;  // Bright Yellow
-    private static final float MID_R    = 0.95F,    MID_G   = 0.3F,     MID_B   = 0.05F; // Deep Orange-Red
-    private static final float END_R    = 0.4F,     END_G   = 0.05F,    END_B   = 0.0F;  // Dark Crimson
+    public static final float START_R  = 1.0F,     START_G = 0.85F,    START_B = 0.2F;  // Bright Yellow
+    public static final float MID_R    = 0.95F,    MID_G   = 0.3F,     MID_B   = 0.05F; // Deep Orange-Red
+    public static final float END_R    = 0.4F,     END_G   = 0.05F,    END_B   = 0.0F;  // Dark Crimson
 
-    public EmberParticle(float x, float y, int z, float vx, float vy, int lifetime, float scale) {
+    public EmberGuiParticle(float x, float y, int z, float vx, float vy, int lifetime, float scale) {
         super(
                 FastColor.ARGB32.color(255, (int)(START_R * 255), (int)(START_G * 255), (int)(START_B * 255)),
                 x, y, z, vx, vy, lifetime, scale,

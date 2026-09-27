@@ -61,8 +61,13 @@ public class GLAttributes {
 
     public static final Holder<Attribute> ARROW_GRAVITY = ATTRIBUTES.register("arrow_gravity", () -> new PercentageAttribute(
             prepend("arrow_gravity"),
-            1, 0.01, 10000
+            1, -10000, 10000
     ).setSyncable(true));
+
+    public static final Holder<Attribute> ARROW_KNOCKBACK = ATTRIBUTES.register("arrow_knockback", () -> new PercentageAttribute(
+            prepend("arrow_knockback"),
+            1, 0, 10000
+    ));
 
     public static final Holder<Attribute> CRITICAL_DAMAGE = ATTRIBUTES.register("critical_damage", () -> new PercentageAttribute(
             prepend("critical_damage"),

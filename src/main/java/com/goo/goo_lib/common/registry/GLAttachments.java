@@ -22,4 +22,12 @@ public class GLAttachments {
                             .build()
             );
 
+    public static final Supplier<AttachmentType<Float>> ARROW_KNOCKBACK =
+            ATTACHMENT_TYPES.register("arrow_knockback", () ->
+                    AttachmentType.builder(() -> 1.0F)
+                            .serialize(Codec.FLOAT)
+                            .sync((holder, targetPlayer) -> holder == targetPlayer, ByteBufCodecs.FLOAT)
+                            .build()
+            );
+
 }

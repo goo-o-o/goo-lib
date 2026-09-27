@@ -11,6 +11,8 @@
   "attributes.goo_lib.arrow_damage.desc": "Affects the final damage of arrows",
   "attributes.goo_lib.arrow_gravity": "Arrow Gravity",
   "attributes.goo_lib.arrow_gravity.desc": "Affects the gravity of arrows",
+  "attributes.goo_lib.arrow_knockback": "Arrow Knockback",
+  "attributes.goo_lib.arrow_knockback.desc": "Knockback multiplier of arrows",
   "attributes.goo_lib.critical_damage": "Critical Damage",
   "attributes.goo_lib.critical_damage.desc": "Multiplier on how much damage is done in a Critical Hit",
   "attributes.goo_lib.xp_gain": "XP Gain",

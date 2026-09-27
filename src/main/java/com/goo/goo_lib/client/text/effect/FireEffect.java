@@ -1,6 +1,6 @@
 package com.goo.goo_lib.client.text.effect;
 
-import com.goo.goo_lib.client.particle.gui.EmberParticle;
+import com.goo.goo_lib.client.particle.gui.EmberGuiParticle;
 import com.goo.goo_lib.client.particle.gui.GuiParticleSystem;
 import com.goo.goo_lib.client.registry.GLRenderTypes;
 import com.goo.goo_lib.client.text.GlyphVertexData;
@@ -46,7 +46,7 @@ public class FireEffect implements TextEffect<FireEffect.Config>, OverlayEffect<
             float randomX = random.nextFloat(pos[0].x, pos[3].x);
             float randomY = random.nextFloat(pos[0].y, pos[1].y);
 
-            EmberParticle particle = new EmberParticle(
+            EmberGuiParticle particle = new EmberGuiParticle(
                     randomX,
                     randomY,
                     401,
